@@ -5,12 +5,11 @@
 #include <QGraphicsScene>
 #include <QTimer>
 #include <QInputDialog>
-
-#include <thread>
-#include <mutex>
-#include <chrono>
+#include <QMessageBox>
 
 #include "AtmegaTimer.h"
+#include "PreciseTimer.h"
+#include "GraphicDrawer.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -22,48 +21,58 @@ class MainWindow : public QMainWindow
 
 public:
     MainWindow(QWidget *parent = nullptr);
-    ~MainWindow();
+    virtual ~MainWindow();
 
 public slots:
 
     void startButtonPressed();
     void stopButtonPressed();
+
+    //clock select registers change
     void changeCs10();
-    void getClk();
+    void changeCs11();
+    void changeCs12();
+
+    //wage generation registers change
+    void changeWgm10();
+    void changeWgm11();
+    void changeWgm12();
+    void changeWgm13();
+
+    //compare output registers change
+    void changeCom1a0();
+    void changeCom1a1();
+
+    //clock frequency setting
+    void setClk();
+    void setT1();
+    void changeActualClk();
+
+    //compare registers setting
+    void setOcr1a();
+    void setIcr1();
+    void changeTop();
+
+    //overflow and compare output flags change
+    void changeTov1();
+    void changeOc1a();
 
 private:
+
     Ui::MainWindow *ui;
 
-    QGraphicsScene* scene;
+    QGraphicsScene* _scene;
 
-    QLine ox;
-    QLine oy;
+    AtmegaTimer _atmegaTimer;
 
-    int x1 = -360;
-    int y1 = 0;
-    int x2 = 100;
-    int y2 = 100;
-
-    std::mutex boolLock;
+    GraphicDrawer _graphicDrawer;
 
     QTimer timer;
 
-    int xPrev = x1;
-    int yPrev = 300;
-
-    int xNew = x1;
-    int yNew = y1;
-
     void init();
+    void initLabels();
     void initConnections();
     void experiments();
     void executeProgram();
-
-    bool isGraphicDrowing;
-
-    long frequency;
-
-    AtmegaTimer atmegaTimer;
-
 };
 #endif // MAINWINDOW_H

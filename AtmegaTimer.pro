@@ -10,15 +10,21 @@ CONFIG += c++11
 
 SOURCES += \
     AtmegaTimer.cpp \
+    BitUtils.cpp \
     ClockSelect.cpp \
+    GraphicDrawer.cpp \
+    PreciseTimer.cpp \
     WaveformGenerator.cpp \
     main.cpp \
     MainWindow.cpp
 
 HEADERS += \
     AtmegaTimer.h \
+    BitUtils.h \
     ClockSelect.h \
+    GraphicDrawer.h \
     MainWindow.h \
+    PreciseTimer.h \
     WaveFormGenerator.h
 
 FORMS += \

@@ -1,6 +1,7 @@
 #ifndef CLOCKSELECT_H
 #define CLOCKSELECT_H
 
+#include "BitUtils.h"
 
 class ClockSelect
 {
@@ -27,13 +28,15 @@ public:
     inline bool cs12() const {return _cs12;}
 
     inline long t1() const {return _t1;}
-    inline long frequency() const {return _actualFrequency;}
+    inline long clk() const {return _clk;}
+    inline long actualClk() const {return _actualClk;}
 
     void setCs10(bool newVal);
     void setCs11(bool newVal);
     void setCs12(bool newVal);
 
-    void setFrequency(long frequency);
+    void setClk(long frequency);
+    void setT1(long frequency);
 
 private:
 
@@ -45,10 +48,10 @@ private:
 
     int _t1;
 
-    State state;
+    State _state;
 
-    long _inputFrequency;
-    long _actualFrequency;
+    long _clk;
+    long _actualClk;
 
     long calculateActualFrequency();
 };

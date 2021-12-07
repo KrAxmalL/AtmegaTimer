@@ -3,6 +3,8 @@
 
 #include <string>
 
+#include "BitUtils.h"
+
 class WaveFormGenerator
 {
 public:
@@ -28,8 +30,32 @@ public:
         FastPWMOcr = 0xF,
     };
 
-    WaveFormGenerator(int ocr1a, int icr1a, Mode mode);
-    WaveFormGenerator(int ocr1a, int icr1a, bool wgm13, bool wgm12, bool wgm11, bool wgm10);
+    //only for ocr1a changing
+    //but using also for icr1a - for simplicity
+    enum class RegUpdateMode: int
+    {
+        Immediate,
+        Top,
+        Bottom,
+        Reserved
+    };
+
+    enum class Tov1UpdateMode: int
+    {
+        Max,
+        Top,
+        Bottom,
+        Reserved
+    };
+
+    static constexpr int Max = 0xFFFF;
+    static constexpr int Bottom = 0x0000;
+    static constexpr int Top_8bit = 0x00FF;
+    static constexpr int Top_9bit = 0x01FF;
+    static constexpr int Top_10bit = 0x03FF;
+
+    WaveFormGenerator(int ocr1a, int icr1, Mode mode);
+    WaveFormGenerator(int ocr1a, int icr1, bool wgm13, bool wgm12, bool wgm11, bool wgm10);
 
     ~WaveFormGenerator();
 
@@ -39,16 +65,25 @@ public:
     inline bool wgm13() const {return _wgm13;}
 
     inline int ocr1a() const {return _ocr1a;}
-    inline int icr1a() const {return _icr1a;}
+    inline int icr1() const {return _icr1;}
 
     inline Mode mode() const {return _mode;}
+
+    RegUpdateMode regUpdateMode() const;
+    Tov1UpdateMode tov1UpdateMode() const;
+
+    /*bool isNormalMode();
+    bool isCtcMode();
+    bool isFastPwmMode();
+    bool isPhaseCorrectMode();
+    bool isPhaseAndFrequencyCorrectMode();*/
 
     void setWgm10(bool newVal);
     void setWgm11(bool newVal);
     void setWgm12(bool newVal);
     void setWgm13(bool newVal);
 
-    void setIcr1a(int newVal);
+    void setIcr1(int newVal);
     void setOcr1a(int newVal);
 
     void setMode(Mode mode);
@@ -58,11 +93,6 @@ public:
     int top() const;
 
 private:
-
-    static constexpr int Max = 0xFFFF;
-    static constexpr int Top_8bit = 0x00FF;
-    static constexpr int Top_9bit = 0x01FF;
-    static constexpr int Top_10bit = 0x03FF;
 
     static constexpr Mode modes[] = { Mode::Normal, Mode::PWM8Ph, Mode::PWM9Ph, Mode::PWM10Ph,
                                       Mode::CTCOcr, Mode::FastPWM8, Mode::FastPWM9, Mode::FastPWM10,
@@ -75,7 +105,7 @@ private:
     bool _wgm13;
 
     int _ocr1a;
-    int _icr1a;
+    int _icr1;
 
     int _reg;
 
