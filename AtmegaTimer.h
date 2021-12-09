@@ -76,6 +76,10 @@ public:
     void phaseCorrectStep();
     void phaseAndFrequencyCorrectStep();
 
+    int comparableValue();
+
+    WaveFormGenerator::Mode timerMode();
+
 signals:
 
     void tov1Changed();

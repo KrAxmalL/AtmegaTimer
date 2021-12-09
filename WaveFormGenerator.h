@@ -92,6 +92,8 @@ public:
 
     int top() const;
 
+    int comparableValue();
+
 private:
 
     static constexpr Mode modes[] = { Mode::Normal, Mode::PWM8Ph, Mode::PWM9Ph, Mode::PWM10Ph,

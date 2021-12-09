@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QGraphicsView>
+#include <QDebug>
 
 #include "AtmegaTimer.h"
 
@@ -21,6 +22,12 @@ public slots:
 
     void drawNextLines();
 
+    void drawNextNormalMode();
+    void drawNextCtcMode();
+    void drawNextFastPwmMode();
+    void drawNextPhaseCorrectPwmMode();
+    void drawNextPhaseFrequencyCorrectMode();
+
 signals:
 
 private:
@@ -29,20 +36,21 @@ private:
 
     AtmegaTimer& _atmegaTimer;
 
-    int _drawingSteps = 300;
+    static constexpr int _drawingSteps = 300;
+    int _performedSteps = 0;
 
     QGraphicsLineItem* _ox;
     QGraphicsLineItem* _oy;
 
     //coordinates of ox and oy
-    qreal _ox0 = -400;
-    qreal _oy0 = 680;
-    qreal _ox1 = 400;
-    qreal _oy1 = 0;
+    static constexpr qreal _ox0 = -400;
+    static constexpr qreal _oy0 = 680;
+    static constexpr qreal _ox1 = 400;
+    static constexpr qreal _oy1 = 0;
 
     //coordinates for tcnt graphic
-    qreal _tcntStartX = _ox0;
-    qreal _tcntStartY = _oy0 - 100;
+    static constexpr qreal _tcntStartX = _ox0;
+    static constexpr qreal _tcntStartY = _oy0 - 100;
 
     qreal _tcntPrevX = _tcntStartX;
     qreal _tcntPrevY = _tcntStartY;
@@ -51,16 +59,14 @@ private:
     qreal _tcntNewY = _tcntStartY;
 
     //horizontal distance between time points (1 second)
-    qreal _xDistanceBetweenPoints = 100;
-    qreal _movementsForOneCycle = 20;
+    static constexpr qreal _xDistanceBetweenPoints = 200;
     qreal _xDelta = 0;
     qreal _yDelta = 0;
-    qreal _ySteps = 0;
-    int _currentXMovements = 0;
+    //qreal _ySteps = 0;
 
     //coordinates for oc1a graphic
-    qreal _oc1aStartX = _ox0;
-    qreal _oc1aStartY = _oy0 - 50;
+    static constexpr qreal _oc1aStartX = _ox0;
+    static constexpr qreal _oc1aStartY = _oy0 - 50;
 
     qreal _oc1aPrevX = _oc1aStartX;
     qreal _oc1aPrevY = _oc1aStartY;
@@ -70,7 +76,9 @@ private:
 
     qreal oc1aDistY = -20;
 
-    QHash<int, int> _yCoordinateToBorder;
+    bool _reachedTop = false;
+
+    QHash<int, qreal> _yCoordinateToBorder;
 
     void init();
 };

@@ -106,6 +106,26 @@ int WaveFormGenerator::top() const
     }
 }
 
+int  WaveFormGenerator::comparableValue()
+{
+    switch(_mode)
+    {
+        case Mode::Normal: return Max;
+
+        case Mode::CTCIcr: return _icr1;
+
+        case Mode::PWM8Ph: case Mode::FastPWM8: case Mode::PWM9Ph:
+        case Mode::FastPWM9: case Mode::PWM10Ph: case Mode::FastPWM10:
+        case Mode::FastPWMIcr: case Mode::PWMPhFrIcr: case Mode::PWMPhIcr:
+        case Mode::CTCOcr: case Mode::FastPWMOcr: case Mode::PWMPhFrOcr:
+        case Mode::PWMPhOcr: return _ocr1a;
+
+        case Mode::Reserved: return 0; //not used
+
+        default: throw std::exception();
+    }
+}
+
 WaveFormGenerator::RegUpdateMode WaveFormGenerator::regUpdateMode() const
 {
     switch(_mode)

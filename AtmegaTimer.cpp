@@ -143,6 +143,16 @@ void AtmegaTimer::performClock()
     }
 }
 
+int AtmegaTimer::comparableValue()
+{
+    return _waveFormGenerator.comparableValue();
+}
+
+WaveFormGenerator::Mode AtmegaTimer::timerMode()
+{
+    return _waveFormGenerator.mode();
+}
+
 void AtmegaTimer::normalStep()
 {
     if(_tcnt1 == _waveFormGenerator.top())
