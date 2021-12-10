@@ -15,20 +15,12 @@ public:
     explicit GraphicDrawer(QGraphicsScene& scene, AtmegaTimer& atmegaTimer, QWidget *parent = nullptr);
     ~GraphicDrawer();
 
-    void buildCoordinateYMap();
-    void buildCoordinateXMap();
+    void setStartingState();
+    void buildCoordinates();
 
 public slots:
 
     void drawNextLines();
-
-    void drawNextNormalMode();
-    void drawNextCtcMode();
-    void drawNextFastPwmMode();
-    void drawNextPhaseCorrectPwmMode();
-    void drawNextPhaseFrequencyCorrectMode();
-
-signals:
 
 private:
 
@@ -37,10 +29,7 @@ private:
     AtmegaTimer& _atmegaTimer;
 
     static constexpr int _drawingSteps = 300;
-    int _performedSteps = 0;
-
-    QGraphicsLineItem* _ox;
-    QGraphicsLineItem* _oy;
+    int _performedSteps;
 
     //coordinates of ox and oy
     static constexpr qreal _ox0 = -400;
@@ -52,35 +41,45 @@ private:
     static constexpr qreal _tcntStartX = _ox0;
     static constexpr qreal _tcntStartY = _oy0 - 100;
 
-    qreal _tcntPrevX = _tcntStartX;
-    qreal _tcntPrevY = _tcntStartY;
+    qreal _tcntPrevX;
+    qreal _tcntPrevY;
 
-    qreal _tcntNewX = _tcntStartX;
-    qreal _tcntNewY = _tcntStartY;
+    qreal _tcntNewX;
+    qreal _tcntNewY;
 
     //horizontal distance between time points (1 second)
     static constexpr qreal _xDistanceBetweenPoints = 200;
-    qreal _xDelta = 0;
-    qreal _yDelta = 0;
-    //qreal _ySteps = 0;
+    qreal _xDelta;
+    qreal _yDelta;
 
     //coordinates for oc1a graphic
     static constexpr qreal _oc1aStartX = _ox0;
     static constexpr qreal _oc1aStartY = _oy0 - 50;
 
-    qreal _oc1aPrevX = _oc1aStartX;
-    qreal _oc1aPrevY = _oc1aStartY;
+    qreal _oc1aPrevX;
+    qreal _oc1aPrevY;
 
-    qreal _oc1aNewX = _oc1aStartX;
-    qreal _oc1aNewY = _oc1aStartY;
+    qreal _oc1aNewX;
+    qreal _oc1aNewY;
 
-    qreal oc1aDistY = -20;
+    qreal oc1aDistY;
 
-    bool _reachedTop = false;
+    bool _reachedTop;
 
     QHash<int, qreal> _yCoordinateToBorder;
 
     void init();
+
+    void drawNextNormalMode();
+    void drawNextCtcMode();
+    void drawNextFastPwmMode();
+    void drawNextPhaseCorrectPwmMode();
+    void drawNextPhaseFrequencyCorrectMode();
+
+    void buildCoordinateYMap();
+    void buildCoordinateXMap();
+
+    int getNeededTopValue();
 };
 
 #endif // GRAPHICDRAWER_H

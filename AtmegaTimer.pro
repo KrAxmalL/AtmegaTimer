@@ -13,7 +13,6 @@ SOURCES += \
     BitUtils.cpp \
     ClockSelect.cpp \
     GraphicDrawer.cpp \
-    PreciseTimer.cpp \
     WaveformGenerator.cpp \
     main.cpp \
     MainWindow.cpp
@@ -24,7 +23,6 @@ HEADERS += \
     ClockSelect.h \
     GraphicDrawer.h \
     MainWindow.h \
-    PreciseTimer.h \
     WaveFormGenerator.h
 
 FORMS += \

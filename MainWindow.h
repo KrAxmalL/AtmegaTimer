@@ -8,7 +8,6 @@
 #include <QMessageBox>
 
 #include "AtmegaTimer.h"
-#include "PreciseTimer.h"
 #include "GraphicDrawer.h"
 
 QT_BEGIN_NAMESPACE
@@ -27,6 +26,7 @@ public slots:
 
     void startButtonPressed();
     void stopButtonPressed();
+    void clearButtonPressed();
 
     //clock select registers change
     void changeCs10();
@@ -72,7 +72,14 @@ private:
     void init();
     void initLabels();
     void initConnections();
-    void experiments();
-    void executeProgram();
+
+    void disableRuntimeChangingButtons();
+    void enableRuntimeChangingButtons();
+
+    int getMinRegisterValue();
+
+    void setStartButtonState();
+
+    void recalculateCurrentRegisterValue();
 };
 #endif // MAINWINDOW_H

@@ -31,6 +31,8 @@ public:
     inline long clk() const {return _clk;}
     inline long actualClk() const {return _actualClk;}
 
+    inline State state() const {return _state;}
+
     void setCs10(bool newVal);
     void setCs11(bool newVal);
     void setCs12(bool newVal);

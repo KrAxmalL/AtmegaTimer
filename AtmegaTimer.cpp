@@ -153,6 +153,11 @@ WaveFormGenerator::Mode AtmegaTimer::timerMode()
     return _waveFormGenerator.mode();
 }
 
+ClockSelect::State AtmegaTimer::timerState()
+{
+    return _clockSelect.state();
+}
+
 void AtmegaTimer::normalStep()
 {
     if(_tcnt1 == _waveFormGenerator.top())

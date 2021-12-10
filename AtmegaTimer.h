@@ -79,6 +79,7 @@ public:
     int comparableValue();
 
     WaveFormGenerator::Mode timerMode();
+    ClockSelect::State timerState();
 
 signals:
 

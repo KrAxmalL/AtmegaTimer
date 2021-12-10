@@ -12,13 +12,7 @@ GraphicDrawer::~GraphicDrawer() {}
 
 void GraphicDrawer::init()
 {
-    _ox = _scene.addLine(_ox0, _oy0, _ox1, _oy0);
-    _oy = _scene.addLine(_ox0, _oy0, _ox0, _oy1);
-
-    for(int i = 1; i < 5; ++i)
-    {
-        _scene.addLine(_ox0 + (i*_xDistanceBetweenPoints), _oy0 + 10, _ox0 + (i*_xDistanceBetweenPoints), _oy0 - 10);
-    }
+    setStartingState();
 }
 
 void GraphicDrawer::drawNextNormalMode()
@@ -84,7 +78,8 @@ void GraphicDrawer::drawNextCtcMode()
         bool prevOc1a = _atmegaTimer.oc1a();
 
         if((_atmegaTimer.comparableValue() > _yCoordinateToBorder[_performedSteps - 1]
-            && _atmegaTimer.comparableValue() <= _yCoordinateToBorder[_performedSteps]))
+            && _atmegaTimer.comparableValue() <= _yCoordinateToBorder[_performedSteps])
+            || (_performedSteps == _drawingSteps))
         {
             _atmegaTimer.setOc1a(!_atmegaTimer.oc1a());
             emit _atmegaTimer.oc1aChanged();
@@ -188,6 +183,44 @@ void GraphicDrawer::drawNextLines()
     }
 }
 
+void GraphicDrawer::setStartingState()
+{
+    _scene.clear();
+
+    _scene.addLine(_ox0, _oy0, _ox1, _oy0);
+    _scene.addLine(_ox0, _oy0, _ox0, _oy1);
+
+    for(int i = 1; i < 5; ++i)
+    {
+        _scene.addLine(_ox0 + (i*_xDistanceBetweenPoints), _oy0 + 10, _ox0 + (i*_xDistanceBetweenPoints), _oy0 - 10);
+    }
+
+    _xDelta = 0;
+    _yDelta = 0;
+    _reachedTop = false;
+    _performedSteps = 0;
+
+    _tcntPrevX = _tcntStartX;
+    _tcntPrevY = _tcntStartY;
+
+    _tcntNewX = _tcntStartX;
+    _tcntNewY = _tcntStartY;
+
+    _oc1aPrevX = _oc1aStartX;
+    _oc1aPrevY = _oc1aStartY;
+
+    _oc1aNewX = _oc1aStartX;
+    _oc1aNewY = _oc1aStartY;
+
+    oc1aDistY = -20;
+}
+
+void GraphicDrawer::buildCoordinates()
+{
+    buildCoordinateYMap();
+    buildCoordinateXMap();
+}
+
 void GraphicDrawer::buildCoordinateYMap()
 {
     //подумати над розширенням, бо для дуже малих значень таймера лінії нема або дуже мала
@@ -213,12 +246,37 @@ void GraphicDrawer::buildCoordinateYMap()
 
 void GraphicDrawer::buildCoordinateXMap()
 {
+    int actualSteps = getNeededTopValue();
+
     //add the calculation for other modes
-    qreal secondsNeeded = (qreal)_atmegaTimer.top() / (qreal)_atmegaTimer.actualClk();
-    /*if(secondsNeeded == 0)
-    {
-        secondsNeeded = 1;
-    }*/
+    qreal secondsNeeded = (qreal)actualSteps/*_atmegaTimer.top()*/ / (qreal)_atmegaTimer.actualClk();
     qreal pixelsNeeded = _xDistanceBetweenPoints * secondsNeeded;
     _xDelta = pixelsNeeded / (qreal)_drawingSteps;
 }
+
+ int GraphicDrawer::getNeededTopValue()
+ {
+     switch(_atmegaTimer.timerMode())
+     {
+         case WaveFormGenerator::Mode::Normal: return _atmegaTimer.top();
+
+         case WaveFormGenerator::Mode::CTCOcr:
+         case WaveFormGenerator::Mode::CTCIcr: return _atmegaTimer.top() + 1;
+
+         case WaveFormGenerator::Mode::FastPWM8:
+         case WaveFormGenerator::Mode::FastPWM9:
+         case WaveFormGenerator::Mode::FastPWM10:
+         case WaveFormGenerator::Mode::FastPWMOcr:
+         case WaveFormGenerator::Mode::FastPWMIcr: return _atmegaTimer.top() + 1;
+
+         case WaveFormGenerator::Mode::PWM8Ph:
+         case WaveFormGenerator::Mode::PWM9Ph:
+         case WaveFormGenerator::Mode::PWM10Ph:
+         case WaveFormGenerator::Mode::PWMPhOcr:
+         case WaveFormGenerator::Mode::PWMPhIcr:
+         case WaveFormGenerator::Mode::PWMPhFrOcr:
+         case WaveFormGenerator::Mode::PWMPhFrIcr: return _atmegaTimer.top();
+
+         case WaveFormGenerator::Mode::Reserved: return 0;
+     }
+ }

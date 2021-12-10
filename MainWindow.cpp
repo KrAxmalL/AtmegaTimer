@@ -10,7 +10,6 @@ MainWindow::MainWindow(QWidget *parent):
 {
     ui->setupUi(this);
 
-    //experiments();
     init();
 }
 
@@ -22,9 +21,10 @@ MainWindow::~MainWindow()
 
 void MainWindow::initConnections()
 {
-    //start and stop
+    //start, stop and clear buttons
     connect(ui->startButton, &QPushButton::pressed, this, &MainWindow::startButtonPressed);
     connect(ui->stopButton, &QPushButton::pressed, this, &MainWindow::stopButtonPressed);
+    connect(ui->clearButton, &QPushButton::pressed, this, &MainWindow::clearButtonPressed);
 
     //cs registers
     connect(ui->cs10Button, &QPushButton::pressed, this, &MainWindow::changeCs10);
@@ -99,33 +99,31 @@ void MainWindow::init()
     initLabels();
     initConnections();
 
-}
-
-void MainWindow::experiments()
-{
+    setStartButtonState();
 
 }
 
 void MainWindow::startButtonPressed()
 {
     ui->startButton->setEnabled(false);
-
-    //if actual clock is zero - fix and do something
-    _graphicDrawer.buildCoordinateXMap();
-    _graphicDrawer.buildCoordinateYMap();
-
+    ui->clearButton->setEnabled(false);
+    disableRuntimeChangingButtons();
+    _graphicDrawer.buildCoordinates();
     timer.start();
 }
 
 void MainWindow::stopButtonPressed()
 {
-    //boolLock.lock();
-    //preciseTimer.stop();
     timer.stop();
-    //counterTimer.stop();
-    ui->startButton->setEnabled(true);
-    //boolLock.unlock();
-    //ui->graphics->scene()->clear();
+    ui->clearButton->setEnabled(true);
+    setStartButtonState();
+}
+
+void MainWindow::clearButtonPressed()
+{
+    _graphicDrawer.setStartingState();
+    enableRuntimeChangingButtons();
+    setStartButtonState();
 }
 
 void MainWindow::changeCs10()
@@ -133,6 +131,8 @@ void MainWindow::changeCs10()
     bool newVal = !_atmegaTimer.cs10();
     _atmegaTimer.setCs10(newVal);
     ui->cs10Label->setText(QString("CS10: " + QString::number(_atmegaTimer.cs10())));
+
+    setStartButtonState();
 }
 
 void MainWindow::changeCs11()
@@ -140,6 +140,8 @@ void MainWindow::changeCs11()
     bool newVal = !_atmegaTimer.cs11();
     _atmegaTimer.setCs11(newVal);
     ui->cs11Label->setText(QString("CS11: " + QString::number(_atmegaTimer.cs11())));
+
+    setStartButtonState();
 }
 
 void MainWindow::changeCs12()
@@ -147,6 +149,8 @@ void MainWindow::changeCs12()
     bool newVal = !_atmegaTimer.cs12();
     _atmegaTimer.setCs12(newVal);
     ui->cs12Label->setText(QString("CS12: " + QString::number(_atmegaTimer.cs12())));
+
+    setStartButtonState();
 }
 
 void MainWindow::changeWgm10()
@@ -154,6 +158,9 @@ void MainWindow::changeWgm10()
      bool newVal = !_atmegaTimer.wgm10();
      _atmegaTimer.setWgm10(newVal);
      ui->wgm10Label->setText(QString("WGM10: " + QString::number(_atmegaTimer.wgm10())));
+
+     setStartButtonState();
+     recalculateCurrentRegisterValue();
 }
 
 void MainWindow::changeWgm11()
@@ -161,6 +168,9 @@ void MainWindow::changeWgm11()
     bool newVal = !_atmegaTimer.wgm11();
     _atmegaTimer.setWgm11(newVal);
     ui->wgm11Label->setText(QString("WGM11: " + QString::number(_atmegaTimer.wgm11())));
+
+    setStartButtonState();
+    recalculateCurrentRegisterValue();
 }
 
 void MainWindow::changeWgm12()
@@ -168,6 +178,9 @@ void MainWindow::changeWgm12()
     bool newVal = !_atmegaTimer.wgm12();
     _atmegaTimer.setWgm12(newVal);
     ui->wgm12Label->setText(QString("WGM12: " + QString::number(_atmegaTimer.wgm12())));
+
+    setStartButtonState();
+    recalculateCurrentRegisterValue();
 }
 
 void MainWindow::changeWgm13()
@@ -175,6 +188,9 @@ void MainWindow::changeWgm13()
     bool newVal = !_atmegaTimer.wgm13();
     _atmegaTimer.setWgm13(newVal);
     ui->wgm13Label->setText(QString("WGM13: " + QString::number(_atmegaTimer.wgm13())));
+
+    setStartButtonState();
+    recalculateCurrentRegisterValue();
 }
 
 void MainWindow::changeCom1a0()
@@ -182,6 +198,8 @@ void MainWindow::changeCom1a0()
     bool newVal = !_atmegaTimer.com1a0();
     _atmegaTimer.setCom1a0(newVal);
     ui->com1a0Label->setText(QString("COM1A0: " + QString::number(_atmegaTimer.com1a0())));
+
+    setStartButtonState();
 }
 
 void MainWindow::changeCom1a1()
@@ -189,6 +207,8 @@ void MainWindow::changeCom1a1()
     bool newVal = !_atmegaTimer.com1a1();
     _atmegaTimer.setCom1a1(newVal);
     ui->com1a1Label->setText(QString("COM1A1: " + QString::number(_atmegaTimer.com1a1())));
+
+    setStartButtonState();
 }
 
 void MainWindow::setClk()
@@ -210,6 +230,7 @@ void MainWindow::setClk()
             {
                 _atmegaTimer.setClk(readedClk);
                 ui->clkLabel->setText(QString("CLK: " + QString::number(_atmegaTimer.clk())));
+                setStartButtonState();
             }
 
         } catch (const std::invalid_argument& ex) {
@@ -244,6 +265,7 @@ void MainWindow::setT1()
             {
                 _atmegaTimer.setT1(readedT1);
                 ui->t1Label->setText(QString("T1: " + QString::number(_atmegaTimer.t1())));
+                setStartButtonState();
             }
 
         } catch (const std::invalid_argument& ex) {
@@ -266,10 +288,12 @@ void MainWindow::changeActualClk()
 
 void MainWindow::setOcr1a()
 {   
+    timer.stop();
+
     bool isOkPressed = false;
     QInputDialog dialog;
     dialog.setInputMode(QInputDialog::IntInput);
-    int newVal = dialog.getInt(this, "Enter OCR1A value", "Enter OCR1A value: ", 0, 0, 65535, 1, &isOkPressed);
+    int newVal = dialog.getInt(this, "Enter OCR1A value", "Enter OCR1A value: ", 10, getMinRegisterValue(), WaveFormGenerator::Max, 1, &isOkPressed);
     if(isOkPressed)
     {
         if(newVal < WaveFormGenerator::Bottom || newVal > WaveFormGenerator::Max)
@@ -283,6 +307,7 @@ void MainWindow::setOcr1a()
         {
             _atmegaTimer.setOcr1a(newVal);
             ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1a())));
+            setStartButtonState();
         }
     }
 }
@@ -294,7 +319,7 @@ void MainWindow::setIcr1()
     bool isOkPressed = false;
     QInputDialog dialog;
     dialog.setInputMode(QInputDialog::IntInput);
-    int newVal = dialog.getInt(this, "Enter ICR1 value", "Enter ICR1 value: ", 0, 0, 65535, 1, &isOkPressed);
+    int newVal = dialog.getInt(this, "Enter ICR1 value", "Enter ICR1 value: ", 10, getMinRegisterValue(), WaveFormGenerator::Max, 1, &isOkPressed);
     if(isOkPressed)
     {
         if(newVal < WaveFormGenerator::Bottom || newVal > WaveFormGenerator::Max)
@@ -308,10 +333,9 @@ void MainWindow::setIcr1()
         {
             _atmegaTimer.setIcr1(newVal);
             ui->icr1Label->setText(QString("ICR1: " + QString::number(_atmegaTimer.icr1())));
+            setStartButtonState();
         }
     }
-
-    timer.start();
 }
 
 void MainWindow::changeTop()
@@ -327,4 +351,88 @@ void MainWindow::changeTov1()
 void MainWindow::changeOc1a()
 {
     ui->oc1aLabel->setText("OC1A: " + QString::number(_atmegaTimer.oc1a()));
+}
+
+void MainWindow::disableRuntimeChangingButtons()
+{
+    ui->clkButton->setEnabled(false);
+    ui->com1a0Button->setEnabled(false);
+    ui->com1a1Button->setEnabled(false);
+    ui->cs10Button->setEnabled(false);
+    ui->cs11Button->setEnabled(false);
+    ui->cs12Button->setEnabled(false);
+    ui->t1Button->setEnabled(false);
+    ui->wgm10Button->setEnabled(false);
+    ui->wgm11Button->setEnabled(false);
+    ui->wgm12Button->setEnabled(false);
+    ui->wgm13Button->setEnabled(false);
+}
+
+void MainWindow::enableRuntimeChangingButtons()
+{
+    ui->clkButton->setEnabled(true);
+    ui->com1a0Button->setEnabled(true);
+    ui->com1a1Button->setEnabled(true);
+    ui->cs10Button->setEnabled(true);
+    ui->cs11Button->setEnabled(true);
+    ui->cs12Button->setEnabled(true);
+    ui->t1Button->setEnabled(true);
+    ui->wgm10Button->setEnabled(true);
+    ui->wgm11Button->setEnabled(true);
+    ui->wgm12Button->setEnabled(true);
+    ui->wgm13Button->setEnabled(true);
+}
+
+int MainWindow::getMinRegisterValue()
+{
+    switch(_atmegaTimer.timerMode())
+    {
+        case WaveFormGenerator::Mode::Normal:
+        case WaveFormGenerator::Mode::CTCOcr:
+        case WaveFormGenerator::Mode::CTCIcr:
+        case WaveFormGenerator::Mode::Reserved: return 0;
+
+        case WaveFormGenerator::Mode::FastPWM8:
+        case WaveFormGenerator::Mode::FastPWM9:
+        case WaveFormGenerator::Mode::FastPWM10:
+        case WaveFormGenerator::Mode::FastPWMOcr:
+        case WaveFormGenerator::Mode::FastPWMIcr:
+        case WaveFormGenerator::Mode::PWM8Ph:
+        case WaveFormGenerator::Mode::PWM9Ph:
+        case WaveFormGenerator::Mode::PWM10Ph:
+        case WaveFormGenerator::Mode::PWMPhOcr:
+        case WaveFormGenerator::Mode::PWMPhIcr:
+        case WaveFormGenerator::Mode::PWMPhFrOcr:
+        case WaveFormGenerator::Mode::PWMPhFrIcr: return 3;
+    }
+}
+
+void MainWindow::setStartButtonState()
+{
+    if(_atmegaTimer.actualClk() <= 0
+       || _atmegaTimer.timerMode() == WaveFormGenerator::Mode::Reserved
+       || _atmegaTimer.timerState() == ClockSelect::State::Off)
+    {
+        ui->startButton->setEnabled(false);
+    }
+    else
+    {
+        ui->startButton->setEnabled(true);
+    }
+}
+
+void MainWindow::recalculateCurrentRegisterValue()
+{
+    int currentMin = getMinRegisterValue();
+    if(_atmegaTimer.ocr1a() < currentMin)
+    {
+        _atmegaTimer.setOcr1a(currentMin);
+         ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1a())));
+    }
+
+    if(_atmegaTimer.icr1() < currentMin)
+    {
+        _atmegaTimer.setIcr1(currentMin);
+         ui->icr1Label->setText(QString("ICR1: " + QString::number(_atmegaTimer.icr1())));
+    }
 }
