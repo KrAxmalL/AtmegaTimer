@@ -55,6 +55,11 @@ int AtmegaTimer::ocr1a()
     return _waveFormGenerator.ocr1a();
 }
 
+int AtmegaTimer::ocr1aBuffer()
+{
+    return _waveFormGenerator.ocr1aBuffer();
+}
+
 bool AtmegaTimer::wgm10() const
 {
     return _waveFormGenerator.wgm10();
@@ -101,7 +106,9 @@ void AtmegaTimer::setClk(long frequency) { _clockSelect.setClk(frequency); emit 
 
 void AtmegaTimer::setT1(long frequency) { _clockSelect.setT1(frequency); emit actualClkChanged(); }
 
-void AtmegaTimer::setOcr1a(int val) { _waveFormGenerator.setOcr1a(val); emit topChanged(); }
+void AtmegaTimer::setOcr1a(int val) { _waveFormGenerator.setOcr1aBuffer(val); }
+
+void AtmegaTimer::loadOcr1aFromBuffer() {_waveFormGenerator.loadOcr1aFromBuffer(); emit topChanged();}
 
 void AtmegaTimer::setIcr1(int val) { _waveFormGenerator.setIcr1(val); emit topChanged(); }
 

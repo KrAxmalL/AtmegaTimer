@@ -69,6 +69,9 @@ private:
 
     QTimer timer;
 
+    bool _stopped = false;
+    bool _isDrawing = false;
+
     void init();
     void initLabels();
     void initConnections();
@@ -76,7 +79,8 @@ private:
     void disableRuntimeChangingButtons();
     void enableRuntimeChangingButtons();
 
-    int getMinRegisterValue();
+    int getMinOcr1aValue();
+    int getMinIcr1Value();
 
     void setStartButtonState();
 

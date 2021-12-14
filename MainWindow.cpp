@@ -108,22 +108,37 @@ void MainWindow::startButtonPressed()
     ui->startButton->setEnabled(false);
     ui->clearButton->setEnabled(false);
     disableRuntimeChangingButtons();
-    _graphicDrawer.buildCoordinates();
+    if(!_stopped)
+    {
+        _graphicDrawer.buildCoordinates();
+    }
+    _stopped = false;
+    _isDrawing = true;
     timer.start();
 }
 
 void MainWindow::stopButtonPressed()
 {
-    timer.stop();
-    ui->clearButton->setEnabled(true);
-    setStartButtonState();
+    if(!_stopped)
+    {
+        timer.stop();
+        _stopped = true;
+        ui->clearButton->setEnabled(true);
+        setStartButtonState();
+    }
 }
 
 void MainWindow::clearButtonPressed()
 {
+    _atmegaTimer.setOc1a(0);
+    changeOc1a();
+    _atmegaTimer.setTov1(0);
+    changeTov1();
     _graphicDrawer.setStartingState();
     enableRuntimeChangingButtons();
     setStartButtonState();
+    _stopped = false;
+    _isDrawing = false;
 }
 
 void MainWindow::changeCs10()
@@ -293,7 +308,7 @@ void MainWindow::setOcr1a()
     bool isOkPressed = false;
     QInputDialog dialog;
     dialog.setInputMode(QInputDialog::IntInput);
-    int newVal = dialog.getInt(this, "Enter OCR1A value", "Enter OCR1A value: ", 10, getMinRegisterValue(), WaveFormGenerator::Max, 1, &isOkPressed);
+    int newVal = dialog.getInt(this, "Enter OCR1A value", "Enter OCR1A value: ", 10, getMinOcr1aValue(), WaveFormGenerator::Max, 1, &isOkPressed);
     if(isOkPressed)
     {
         if(newVal < WaveFormGenerator::Bottom || newVal > WaveFormGenerator::Max)
@@ -306,7 +321,12 @@ void MainWindow::setOcr1a()
         else
         {
             _atmegaTimer.setOcr1a(newVal);
-            ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1a())));
+            if(!_isDrawing)
+            {
+                _atmegaTimer.loadOcr1aFromBuffer();
+            }
+            _graphicDrawer.buildCoordinates();
+            ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1aBuffer())));
             setStartButtonState();
         }
     }
@@ -319,7 +339,7 @@ void MainWindow::setIcr1()
     bool isOkPressed = false;
     QInputDialog dialog;
     dialog.setInputMode(QInputDialog::IntInput);
-    int newVal = dialog.getInt(this, "Enter ICR1 value", "Enter ICR1 value: ", 10, getMinRegisterValue(), WaveFormGenerator::Max, 1, &isOkPressed);
+    int newVal = dialog.getInt(this, "Enter ICR1 value", "Enter ICR1 value: ", 10, getMinIcr1Value(), WaveFormGenerator::Max, 1, &isOkPressed);
     if(isOkPressed)
     {
         if(newVal < WaveFormGenerator::Bottom || newVal > WaveFormGenerator::Max)
@@ -333,6 +353,7 @@ void MainWindow::setIcr1()
         {
             _atmegaTimer.setIcr1(newVal);
             ui->icr1Label->setText(QString("ICR1: " + QString::number(_atmegaTimer.icr1())));
+            _graphicDrawer.buildCoordinates();
             setStartButtonState();
         }
     }
@@ -383,27 +404,51 @@ void MainWindow::enableRuntimeChangingButtons()
     ui->wgm13Button->setEnabled(true);
 }
 
-int MainWindow::getMinRegisterValue()
+int MainWindow::getMinOcr1aValue()
 {
     switch(_atmegaTimer.timerMode())
     {
+        case WaveFormGenerator::Mode::PWMPhOcr:
+        case WaveFormGenerator::Mode::PWMPhFrOcr:
+        case WaveFormGenerator::Mode::FastPWMOcr: return 3;
+
+        case WaveFormGenerator::Mode::FastPWM8:
+        case WaveFormGenerator::Mode::FastPWM9:
+        case WaveFormGenerator::Mode::FastPWM10:
+        case WaveFormGenerator::Mode::FastPWMIcr:
+        case WaveFormGenerator::Mode::PWM8Ph:
+        case WaveFormGenerator::Mode::PWM9Ph:
+        case WaveFormGenerator::Mode::PWM10Ph:
+        case WaveFormGenerator::Mode::PWMPhIcr:
+        case WaveFormGenerator::Mode::PWMPhFrIcr:
         case WaveFormGenerator::Mode::Normal:
         case WaveFormGenerator::Mode::CTCOcr:
         case WaveFormGenerator::Mode::CTCIcr:
         case WaveFormGenerator::Mode::Reserved: return 0;
+    }
+}
+
+int MainWindow::getMinIcr1Value()
+{
+    switch(_atmegaTimer.timerMode())
+    {
+        case WaveFormGenerator::Mode::PWMPhIcr:
+        case WaveFormGenerator::Mode::PWMPhFrIcr:
+        case WaveFormGenerator::Mode::FastPWMIcr: return 3;
 
         case WaveFormGenerator::Mode::FastPWM8:
         case WaveFormGenerator::Mode::FastPWM9:
         case WaveFormGenerator::Mode::FastPWM10:
         case WaveFormGenerator::Mode::FastPWMOcr:
-        case WaveFormGenerator::Mode::FastPWMIcr:
         case WaveFormGenerator::Mode::PWM8Ph:
         case WaveFormGenerator::Mode::PWM9Ph:
         case WaveFormGenerator::Mode::PWM10Ph:
         case WaveFormGenerator::Mode::PWMPhOcr:
-        case WaveFormGenerator::Mode::PWMPhIcr:
         case WaveFormGenerator::Mode::PWMPhFrOcr:
-        case WaveFormGenerator::Mode::PWMPhFrIcr: return 3;
+        case WaveFormGenerator::Mode::Normal:
+        case WaveFormGenerator::Mode::CTCOcr:
+        case WaveFormGenerator::Mode::CTCIcr:
+        case WaveFormGenerator::Mode::Reserved: return 0;
     }
 }
 
@@ -423,16 +468,17 @@ void MainWindow::setStartButtonState()
 
 void MainWindow::recalculateCurrentRegisterValue()
 {
-    int currentMin = getMinRegisterValue();
-    if(_atmegaTimer.ocr1a() < currentMin)
+    int ocr1aMin = getMinOcr1aValue();
+    if(_atmegaTimer.ocr1a() < ocr1aMin)
     {
-        _atmegaTimer.setOcr1a(currentMin);
+        _atmegaTimer.setOcr1a(ocr1aMin);
          ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1a())));
     }
 
-    if(_atmegaTimer.icr1() < currentMin)
+    int icr1Min = getMinIcr1Value();
+    if(_atmegaTimer.icr1() < icr1Min)
     {
-        _atmegaTimer.setIcr1(currentMin);
+        _atmegaTimer.setIcr1(icr1Min);
          ui->icr1Label->setText(QString("ICR1: " + QString::number(_atmegaTimer.icr1())));
     }
 }

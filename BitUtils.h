@@ -3,4 +3,5 @@
 
 int setBitNToX(int num, int n, bool x);
 
+
 #endif // BITUTILS_H

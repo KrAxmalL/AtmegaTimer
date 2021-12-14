@@ -38,6 +38,7 @@ public:
     int icr1();
 
     int ocr1a();
+    int ocr1aBuffer();
 
     bool wgm10() const;
     bool wgm11() const;
@@ -63,6 +64,7 @@ public:
     void setT1(long frequency);
 
     void setOcr1a(int val);
+    void loadOcr1aFromBuffer();
     void setIcr1(int val);
 
     void performClock();

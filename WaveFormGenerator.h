@@ -65,6 +65,7 @@ public:
     inline bool wgm13() const {return _wgm13;}
 
     inline int ocr1a() const {return _ocr1a;}
+    inline int ocr1aBuffer() const {return _ocr1aBuffer;}
     inline int icr1() const {return _icr1;}
 
     inline Mode mode() const {return _mode;}
@@ -85,6 +86,8 @@ public:
 
     void setIcr1(int newVal);
     void setOcr1a(int newVal);
+    void setOcr1aBuffer(int newVal);
+    void loadOcr1aFromBuffer();
 
     void setMode(Mode mode);
 
@@ -108,6 +111,8 @@ private:
 
     int _ocr1a;
     int _icr1;
+
+    int _ocr1aBuffer;
 
     int _reg;
 

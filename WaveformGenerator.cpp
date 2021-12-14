@@ -1,6 +1,6 @@
 #include "WaveFormGenerator.h"
 
-WaveFormGenerator::WaveFormGenerator(int ocr1a, int icr1, Mode mode): _ocr1a(ocr1a), _icr1(icr1),
+WaveFormGenerator::WaveFormGenerator(int ocr1a, int icr1, Mode mode): _ocr1aBuffer(ocr1a), _ocr1a(0), _icr1(icr1),
                                                                        _mode(mode), _reg(0),
                                                                        _wgm13(0), _wgm12(0),
                                                                        _wgm11(0), _wgm10(0)
@@ -13,7 +13,7 @@ WaveFormGenerator::WaveFormGenerator(int ocr1a, int icr1, Mode mode): _ocr1a(ocr
 }
 
 WaveFormGenerator::WaveFormGenerator(int ocr1a, int icr1, bool wgm13,
-                                     bool wgm12, bool wgm11, bool wgm10): _ocr1a(ocr1a), _icr1(icr1),
+                                     bool wgm12, bool wgm11, bool wgm10): _ocr1aBuffer(ocr1a), _ocr1a(0), _icr1(icr1),
                                                                           _wgm13(wgm13), _wgm12(wgm12),
                                                                           _wgm11(wgm11), _wgm10(wgm10),
                                                                           _reg(0), _mode(WaveFormGenerator::Mode::Normal)
@@ -64,6 +64,16 @@ void WaveFormGenerator::setIcr1(int newVal)
 void WaveFormGenerator::setOcr1a(int newVal)
 {
     _ocr1a = newVal;
+}
+
+void WaveFormGenerator::setOcr1aBuffer(int newVal)
+{
+    _ocr1aBuffer = newVal;
+}
+
+void WaveFormGenerator::loadOcr1aFromBuffer()
+{
+    _ocr1a = _ocr1aBuffer;
 }
 
 void WaveFormGenerator::setMode(Mode mode)

@@ -30,6 +30,7 @@ private:
 
     static constexpr int _drawingSteps = 300;
     int _performedSteps;
+    int _actualSteps = -1;
 
     //coordinates of ox and oy
     static constexpr qreal _ox0 = -400;
@@ -62,9 +63,14 @@ private:
     qreal _oc1aNewX;
     qreal _oc1aNewY;
 
-    qreal oc1aDistY;
+    qreal _oc1aYDelta = -20;
+    qreal _oc1aXDelta = 0;
+
+    int _stepsToReachMax = 0;
 
     bool _reachedTop;
+
+    bool _isGoingUp = true;
 
     QHash<int, qreal> _yCoordinateToBorder;
 
@@ -79,7 +85,13 @@ private:
     void buildCoordinateYMap();
     void buildCoordinateXMap();
 
+    void buildCoordinateFixedYMap();
+    void buildCoordinateFixedXMap();
+
     int getNeededTopValue();
+
+    bool equal(qreal left, qreal right);
+    bool inRange(qreal val, qreal low, qreal high);
 };
 
 #endif // GRAPHICDRAWER_H
