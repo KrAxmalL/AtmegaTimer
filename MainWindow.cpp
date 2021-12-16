@@ -100,7 +100,7 @@ void MainWindow::init()
     initConnections();
 
     setStartButtonState();
-
+    _graphicDrawer.setStartingState();
 }
 
 void MainWindow::startButtonPressed()
@@ -110,7 +110,16 @@ void MainWindow::startButtonPressed()
     disableRuntimeChangingButtons();
     if(!_stopped)
     {
-        _graphicDrawer.buildCoordinates();
+        if(_isDrawing)
+        {
+            _graphicDrawer.updateCoordinates();
+            //_graphicDrawer.buildCoordinates();
+        }
+        else
+        {
+            //_graphicDrawer.updateCoordinates();
+            _graphicDrawer.buildCoordinates();
+        }
     }
     _stopped = false;
     _isDrawing = true;
@@ -325,7 +334,7 @@ void MainWindow::setOcr1a()
             {
                 _atmegaTimer.loadOcr1aFromBuffer();
             }
-            _graphicDrawer.buildCoordinates();
+            _graphicDrawer.updateCoordinates();
             ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1aBuffer())));
             setStartButtonState();
         }
@@ -353,7 +362,7 @@ void MainWindow::setIcr1()
         {
             _atmegaTimer.setIcr1(newVal);
             ui->icr1Label->setText(QString("ICR1: " + QString::number(_atmegaTimer.icr1())));
-            _graphicDrawer.buildCoordinates();
+            _graphicDrawer.updateCoordinates();
             setStartButtonState();
         }
     }

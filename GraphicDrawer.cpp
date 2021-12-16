@@ -54,7 +54,14 @@ void GraphicDrawer::drawNextNormalMode()
 //але додатково перевірити на малих та крайнії значеннях
 void GraphicDrawer::drawNextCtcMode()
 {
+    int prevOcr1a = _atmegaTimer.ocr1a();
     _atmegaTimer.loadOcr1aFromBuffer();
+    if(prevOcr1a != _atmegaTimer.ocr1a())
+    {
+        updateCoordinates();
+    }
+
+   // _atmegaTimer.loadOcr1aFromBuffer();
 
     if(_reachedTop)
     {
@@ -78,12 +85,23 @@ void GraphicDrawer::drawNextCtcMode()
         _oc1aNewX += _oc1aXDelta;
         _oc1aNewY = _oc1aPrevY;
 
+        bool reached = false;
+
         if(_stepsToReachMax == _performedSteps) //add check that reached max possible value - 65535
         {
             _reachedTop = true;
         }
 
-        if(_performedSteps <= _drawingSteps && equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps]))
+        if(_performedSteps == 0)
+        {
+            reached = _atmegaTimer.comparableValue() <=  _yCoordinateToBorder[_performedSteps];
+        }
+        else
+        {
+            reached = inRange(_atmegaTimer.comparableValue(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
+        }
+
+        if(_performedSteps <= _drawingSteps && /*reached*/equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps]))
         {
             /*if(_atmegaTimer.com1a0() && !_atmegaTimer.com1a1())
             {
@@ -175,7 +193,7 @@ void GraphicDrawer::drawNextFastPwmMode()
                 reached = inRange(_atmegaTimer.comparableValue(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
             }
 
-            if(reached/*equal(_atmegaTimer.comparableValue(), _yCoordinateToBorder[_performedSteps])*/)
+            if(reached)
             {
                 _atmegaTimer.setOc1a(!_atmegaTimer.oc1a());
                 emit _atmegaTimer.oc1aChanged();
@@ -503,33 +521,203 @@ void GraphicDrawer::setStartingState()
     _oc1aPrevX = _oc1aStartX;
     _oc1aPrevY = _oc1aStartY;
 
-    //повертати oc1aXDelta i oc1aYDelta ще залежно від wgm
-    if(!_atmegaTimer.com1a0() && !_atmegaTimer.com1a1())
+    //determineDeltas();
+
+    _oc1aNewX = _oc1aPrevX;
+    _oc1aNewY = _oc1aPrevY;
+}
+
+void GraphicDrawer::determineDeltas()
+{
+    if(_atmegaTimer.outputMode() == AtmegaTimer::OutputCompareMode::Disconnected)
     {
+        _atmegaTimer.setOc1a(false);
+        emit _atmegaTimer.oc1aChanged();
+
         _oc1aYDelta = 0;
         _oc1aXDelta = 0;
         _oc1aPrevY = _oc1aStartY;
     }
-    else if(_atmegaTimer.com1a0() && !_atmegaTimer.com1a1())
+    else if(_atmegaTimer.outputMode() == AtmegaTimer::OutputCompareMode::Toggle)
     {
-        _oc1aYDelta = -20;
+        _atmegaTimer.setOc1a(false);
+        emit _atmegaTimer.oc1aChanged();
+
+        switch(_atmegaTimer.timerMode())
+        {
+            case WaveFormGenerator::Mode::CTCOcr:
+            case WaveFormGenerator::Mode::CTCIcr:
+            case WaveFormGenerator::Mode::FastPWMOcr:
+            case WaveFormGenerator::Mode::FastPWMIcr:
+            case WaveFormGenerator::Mode::PWMPhOcr:
+            case WaveFormGenerator::Mode::PWMPhFrOcr: _oc1aYDelta = -20; _oc1aXDelta = _xDelta; break;
+
+            case WaveFormGenerator::Mode::PWMPhIcr:
+            case WaveFormGenerator::Mode::PWMPhFrIcr:
+            case WaveFormGenerator::Mode::Normal:
+            case WaveFormGenerator::Mode::FastPWM8:
+            case WaveFormGenerator::Mode::FastPWM9:
+            case WaveFormGenerator::Mode::FastPWM10:
+            case WaveFormGenerator::Mode::PWM8Ph:
+            case WaveFormGenerator::Mode::PWM9Ph:
+            case WaveFormGenerator::Mode::PWM10Ph:
+            case WaveFormGenerator::Mode::Reserved: _oc1aYDelta = 0; _oc1aXDelta = 0; break;
+        }
+
        _oc1aPrevY = _oc1aStartY;
     }
-    else if(!_atmegaTimer.com1a0() && _atmegaTimer.com1a1())
+    else if(_atmegaTimer.outputMode() == AtmegaTimer::OutputCompareMode::Normal)
     {
+        switch(_atmegaTimer.timerMode())
+        {
+            case WaveFormGenerator::Mode::FastPWMOcr:
+            case WaveFormGenerator::Mode::FastPWMIcr:
+            case WaveFormGenerator::Mode::PWMPhOcr:
+            case WaveFormGenerator::Mode::PWMPhIcr:
+            case WaveFormGenerator::Mode::PWMPhFrIcr:
+            case WaveFormGenerator::Mode::FastPWM8:
+            case WaveFormGenerator::Mode::FastPWM9:
+            case WaveFormGenerator::Mode::FastPWM10:
+            case WaveFormGenerator::Mode::PWM8Ph:
+            case WaveFormGenerator::Mode::PWM9Ph:
+            case WaveFormGenerator::Mode::PWM10Ph:
+            case WaveFormGenerator::Mode::PWMPhFrOcr: _atmegaTimer.setOc1a(true); _oc1aYDelta = 20; _oc1aXDelta = _xDelta; _oc1aPrevY = _oc1aStartY - 20; break;
+
+            case WaveFormGenerator::Mode::CTCOcr:
+            case WaveFormGenerator::Mode::CTCIcr: _atmegaTimer.setOc1a(true); _oc1aYDelta = 0; _oc1aXDelta = _xDelta; _oc1aPrevY = _oc1aStartY - 20; break;
+
+            case WaveFormGenerator::Mode::Normal:
+            case WaveFormGenerator::Mode::Reserved: _atmegaTimer.setOc1a(false); _oc1aYDelta = 0; _oc1aXDelta = 0; _oc1aPrevY = _oc1aStartY; break;
+        }
+
+         emit _atmegaTimer.oc1aChanged();
+
         //_oc1aYDelta = 20;
-        _oc1aYDelta = 0;
-        _oc1aPrevY = _oc1aStartY - 20;
+        //_oc1aYDelta = 0;
+        //_oc1aXDelta = _xDelta;
+        //_oc1aPrevY = _oc1aStartY - 20;
     }
-    else if(_atmegaTimer.com1a0() && _atmegaTimer.com1a1())
+    else if(_atmegaTimer.outputMode() == AtmegaTimer::OutputCompareMode::Inverted)
     {
+        switch(_atmegaTimer.timerMode())
+        {
+            case WaveFormGenerator::Mode::FastPWMOcr:
+            case WaveFormGenerator::Mode::FastPWMIcr:
+            case WaveFormGenerator::Mode::PWMPhOcr:
+            case WaveFormGenerator::Mode::PWMPhIcr:
+            case WaveFormGenerator::Mode::PWMPhFrIcr:
+            case WaveFormGenerator::Mode::FastPWM8:
+            case WaveFormGenerator::Mode::FastPWM9:
+            case WaveFormGenerator::Mode::FastPWM10:
+            case WaveFormGenerator::Mode::PWM8Ph:
+            case WaveFormGenerator::Mode::PWM9Ph:
+            case WaveFormGenerator::Mode::PWM10Ph:
+            case WaveFormGenerator::Mode::PWMPhFrOcr: _atmegaTimer.setOc1a(false); _oc1aYDelta = -20; _oc1aXDelta = _xDelta; _oc1aPrevY = _oc1aStartY; break;
+
+            case WaveFormGenerator::Mode::CTCOcr:
+            case WaveFormGenerator::Mode::CTCIcr:  _atmegaTimer.setOc1a(false); _oc1aYDelta = 0; _oc1aXDelta = _xDelta; _oc1aPrevY = _oc1aStartY; break;
+
+            case WaveFormGenerator::Mode::Normal:
+            case WaveFormGenerator::Mode::Reserved: _atmegaTimer.setOc1a(false); _oc1aYDelta = 0; _oc1aXDelta = 0; _oc1aPrevY = _oc1aStartY; break;
+        }
+
+        emit _atmegaTimer.oc1aChanged();
         //_oc1aYDelta = -20;
-        _oc1aYDelta = 0;
-        _oc1aPrevY = _oc1aStartY;
+        //_oc1aYDelta = 0;
+        //_oc1aXDelta = _xDelta;
+        //_oc1aPrevY = _oc1aStartY;
     }
 
-    _oc1aNewX = _oc1aPrevX;
-    _oc1aNewY = _oc1aPrevY;
+    //_oc1aYDelta = -20;
+    //_oc1aXDelta = _xDelta;
+}
+
+void GraphicDrawer::refreshDeltas()
+{
+    if(_atmegaTimer.outputMode() == AtmegaTimer::OutputCompareMode::Disconnected)
+    {
+        /*_oc1aYDelta = 0;*/
+        _oc1aXDelta = 0;
+    }
+    else if(_atmegaTimer.outputMode() == AtmegaTimer::OutputCompareMode::Toggle)
+    {
+        switch(_atmegaTimer.timerMode())
+        {
+            case WaveFormGenerator::Mode::CTCOcr:
+            case WaveFormGenerator::Mode::CTCIcr:
+            case WaveFormGenerator::Mode::FastPWMOcr:
+            case WaveFormGenerator::Mode::FastPWMIcr:
+            case WaveFormGenerator::Mode::PWMPhOcr:
+            case WaveFormGenerator::Mode::PWMPhFrOcr: /*_oc1aYDelta = -20;*/ _oc1aXDelta = _xDelta; break;
+
+            case WaveFormGenerator::Mode::PWMPhIcr:
+            case WaveFormGenerator::Mode::PWMPhFrIcr:
+            case WaveFormGenerator::Mode::Normal:
+            case WaveFormGenerator::Mode::FastPWM8:
+            case WaveFormGenerator::Mode::FastPWM9:
+            case WaveFormGenerator::Mode::FastPWM10:
+            case WaveFormGenerator::Mode::PWM8Ph:
+            case WaveFormGenerator::Mode::PWM9Ph:
+            case WaveFormGenerator::Mode::PWM10Ph:
+            case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1aXDelta = 0; break;
+        }
+    }
+    else if(_atmegaTimer.outputMode() == AtmegaTimer::OutputCompareMode::Normal)
+    {
+        switch(_atmegaTimer.timerMode())
+        {
+            case WaveFormGenerator::Mode::FastPWMOcr:
+            case WaveFormGenerator::Mode::FastPWMIcr:
+            case WaveFormGenerator::Mode::PWMPhOcr:
+            case WaveFormGenerator::Mode::PWMPhIcr:
+            case WaveFormGenerator::Mode::PWMPhFrIcr:
+            case WaveFormGenerator::Mode::FastPWM8:
+            case WaveFormGenerator::Mode::FastPWM9:
+            case WaveFormGenerator::Mode::FastPWM10:
+            case WaveFormGenerator::Mode::PWM8Ph:
+            case WaveFormGenerator::Mode::PWM9Ph:
+            case WaveFormGenerator::Mode::PWM10Ph:
+            case WaveFormGenerator::Mode::PWMPhFrOcr: /*_oc1aYDelta = 20;*/ _oc1aXDelta = _xDelta; break;
+
+            case WaveFormGenerator::Mode::CTCOcr:
+            case WaveFormGenerator::Mode::CTCIcr: /*_oc1aYDelta = 0;*/ _oc1aXDelta = _xDelta; break;
+
+            case WaveFormGenerator::Mode::Normal:
+            case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1aXDelta = 0; break;
+        }
+        //_oc1aYDelta = 20;
+        //_oc1aYDelta = 0;
+        //_oc1aXDelta = _xDelta;
+        //_oc1aPrevY = _oc1aStartY - 20;
+    }
+    else if(_atmegaTimer.outputMode() == AtmegaTimer::OutputCompareMode::Inverted)
+    {
+        switch(_atmegaTimer.timerMode())
+        {
+            case WaveFormGenerator::Mode::FastPWMOcr:
+            case WaveFormGenerator::Mode::FastPWMIcr:
+            case WaveFormGenerator::Mode::PWMPhOcr:
+            case WaveFormGenerator::Mode::PWMPhIcr:
+            case WaveFormGenerator::Mode::PWMPhFrIcr:
+            case WaveFormGenerator::Mode::FastPWM8:
+            case WaveFormGenerator::Mode::FastPWM9:
+            case WaveFormGenerator::Mode::FastPWM10:
+            case WaveFormGenerator::Mode::PWM8Ph:
+            case WaveFormGenerator::Mode::PWM9Ph:
+            case WaveFormGenerator::Mode::PWM10Ph:
+            case WaveFormGenerator::Mode::PWMPhFrOcr: /*_oc1aYDelta = -20;*/ _oc1aXDelta = _xDelta; break;
+
+            case WaveFormGenerator::Mode::CTCOcr:
+            case WaveFormGenerator::Mode::CTCIcr: /*_oc1aYDelta = 0;*/ _oc1aXDelta = _xDelta; break;
+
+            case WaveFormGenerator::Mode::Normal:
+            case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1aXDelta = 0; break;
+        }
+        //_oc1aYDelta = -20;
+        //_oc1aYDelta = 0;
+        //_oc1aXDelta = _xDelta;
+        //_oc1aPrevY = _oc1aStartY;
+    }
 
     //_oc1aYDelta = -20;
     //_oc1aXDelta = _xDelta;
@@ -540,8 +728,20 @@ void GraphicDrawer::buildCoordinates()
     buildCoordinateYMap();
     buildCoordinateXMap();
 
+    determineDeltas();
+    _oc1aNewX = _oc1aPrevX;
+    _oc1aNewY = _oc1aPrevY;
+
     /*buildCoordinateFixedYMap();
     buildCoordinateFixedXMap();*/
+}
+
+void GraphicDrawer::updateCoordinates()
+{
+    buildCoordinateYMap();
+    buildCoordinateXMap();
+
+    refreshDeltas();
 }
 
 void GraphicDrawer::buildCoordinateYMap()
@@ -585,11 +785,8 @@ void GraphicDrawer::buildCoordinateXMap()
     qreal secondsNeeded = (qreal)actualSteps/*_atmegaTimer.top()*/ / (qreal)_atmegaTimer.actualClk();
     qreal pixelsNeeded = _xDistanceBetweenPoints * secondsNeeded;
     _xDelta = pixelsNeeded / (qreal)_drawingSteps;
-    if(_atmegaTimer.com1a0() || _atmegaTimer.com1a1())
-    {
-        _oc1aXDelta = _xDelta;
-    }
     //_oc1aXDelta = _xDelta;
+
     qInfo() << "xDelta is: " << _xDelta << "\n";
 }
 

@@ -12,6 +12,14 @@ class AtmegaTimer : public QWidget
 
 public:
 
+    enum class OutputCompareMode: int
+    {
+        Disconnected = 0,
+        Toggle = 1,
+        Normal = 2,
+        Inverted = 3,
+    };
+
     AtmegaTimer(long t1, long inputFrequency, int icr1, int ocr1a,
                 bool wgm13, bool wgm12, bool wgm11, bool wgm10,
                 bool cs12, bool cs11, bool cs10, bool com1a1, bool com1a0);
@@ -67,21 +75,11 @@ public:
     void loadOcr1aFromBuffer();
     void setIcr1(int val);
 
-    void performClock();
-
-    void increase();
-    void decrease();
-
-    void normalStep();
-    void ctcStep();
-    void fastPwmStep();
-    void phaseCorrectStep();
-    void phaseAndFrequencyCorrectStep();
-
     int comparableValue();
 
     WaveFormGenerator::Mode timerMode();
     ClockSelect::State timerState();
+    AtmegaTimer::OutputCompareMode outputMode();
 
 signals:
 
@@ -99,6 +97,8 @@ private:
 
     bool _com1a0;
     bool _com1a1;
+
+    OutputCompareMode _outputMode;
 
     WaveFormGenerator _waveFormGenerator;
     ClockSelect _clockSelect;

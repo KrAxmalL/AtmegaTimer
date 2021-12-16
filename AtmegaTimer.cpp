@@ -6,7 +6,14 @@ AtmegaTimer::AtmegaTimer(long t1, long inputFrequency, int icr1, int ocr1a,
                          _tcnt1(0), _tov1(false), _oc1a(false),
                          _waveFormGenerator(ocr1a, icr1, wgm13, wgm12, wgm11, wgm10),
                          _clockSelect(t1, inputFrequency, cs12, cs11, cs10),
-                         _com1a1(com1a1), _com1a0(com1a0) {}
+                         _com1a1(com1a1), _com1a0(com1a0)
+{
+    int mode = 0;
+    mode = setBitNToX(mode, 0, _com1a0);
+    mode = setBitNToX(mode, 1, _com1a1);
+
+    _outputMode = static_cast<AtmegaTimer::OutputCompareMode>(mode);
+}
 
 AtmegaTimer::~AtmegaTimer() {}
 
@@ -94,9 +101,23 @@ void AtmegaTimer::setWgm12(bool newVal) { _waveFormGenerator.setWgm12(newVal); e
 
 void AtmegaTimer::setWgm13(bool newVal) { _waveFormGenerator.setWgm13(newVal); emit topChanged(); }
 
-void AtmegaTimer::setCom1a0(bool newVal) { _com1a0 = newVal; }
+void AtmegaTimer::setCom1a0(bool newVal)
+{
+    _com1a0 = newVal;
 
-void AtmegaTimer::setCom1a1(bool newVal) { _com1a1 = newVal; }
+    int mode = static_cast<int>(_outputMode);
+    mode = setBitNToX(mode, 0, _com1a0);
+    _outputMode = static_cast<AtmegaTimer::OutputCompareMode>(mode);
+}
+
+void AtmegaTimer::setCom1a1(bool newVal)
+{
+    _com1a1 = newVal;
+
+    int mode = static_cast<int>(_outputMode);
+    mode = setBitNToX(mode, 1, _com1a1);
+    _outputMode = static_cast<AtmegaTimer::OutputCompareMode>(mode);
+}
 
 void AtmegaTimer::setOc1a(bool newVal) { _oc1a = newVal; }
 
@@ -111,44 +132,6 @@ void AtmegaTimer::setOcr1a(int val) { _waveFormGenerator.setOcr1aBuffer(val); }
 void AtmegaTimer::loadOcr1aFromBuffer() {_waveFormGenerator.loadOcr1aFromBuffer(); emit topChanged();}
 
 void AtmegaTimer::setIcr1(int val) { _waveFormGenerator.setIcr1(val); emit topChanged(); }
-
-void AtmegaTimer::increase()
-{
-    ++_tcnt1;
-}
-
-void AtmegaTimer::decrease()
-{
-    --_tcnt1;
-}
-
-void AtmegaTimer::performClock()
-{
-    switch(_waveFormGenerator.mode())
-    {
-        case WaveFormGenerator::Mode::Normal: normalStep(); return;
-
-        case WaveFormGenerator::Mode::CTCOcr:
-        case WaveFormGenerator::Mode::CTCIcr: ctcStep(); return;
-
-        case WaveFormGenerator::Mode::FastPWM8:
-        case WaveFormGenerator::Mode::FastPWM9:
-        case WaveFormGenerator::Mode::FastPWM10:
-        case WaveFormGenerator::Mode::FastPWMOcr:
-        case WaveFormGenerator::Mode::FastPWMIcr: fastPwmStep(); return;
-
-        case WaveFormGenerator::Mode::PWM8Ph:
-        case WaveFormGenerator::Mode::PWM9Ph:
-        case WaveFormGenerator::Mode::PWM10Ph:
-        case WaveFormGenerator::Mode::PWMPhOcr:
-        case WaveFormGenerator::Mode::PWMPhIcr: phaseCorrectStep(); return;
-
-        case WaveFormGenerator::Mode::PWMPhFrOcr:
-        case WaveFormGenerator::Mode::PWMPhFrIcr: phaseAndFrequencyCorrectStep(); return;
-
-        case WaveFormGenerator::Mode::Reserved: return;
-    }
-}
 
 int AtmegaTimer::comparableValue()
 {
@@ -165,77 +148,7 @@ ClockSelect::State AtmegaTimer::timerState()
     return _clockSelect.state();
 }
 
-void AtmegaTimer::normalStep()
+AtmegaTimer::OutputCompareMode AtmegaTimer::outputMode()
 {
-    if(_tcnt1 == _waveFormGenerator.top())
-    //if(_tcnt1 == 65535)
-    {
-        _tcnt1 = 0;
-        _tov1 = 1;
-        //depends on com1 mode
-        _oc1a = !_oc1a;
-
-        emit tov1Changed();
-        emit oc1aChanged();
-    }
-    else
-    {
-        ++_tcnt1;
-        //increase();
-    }
-}
-
-void AtmegaTimer::ctcStep()
-{
-    if(_tcnt1 == _waveFormGenerator.top())
-    {
-        _tcnt1 = 0;
-        _tov1 = 1; //maybe not needed
-        //depends on com1 mode
-        _oc1a = !_oc1a;
-
-        emit tov1Changed();
-        emit oc1aChanged();
-    }
-    else
-    {
-        ++_tcnt1;
-        //increase();
-    }
-}
-
-void AtmegaTimer::fastPwmStep()
-{
-    if(_tcnt1 == _waveFormGenerator.ocr1a())
-    {
-        //depends on com1 mode
-        _oc1a = !_oc1a;
-
-        emit oc1aChanged();
-    }
-
-    if(_tcnt1 == _waveFormGenerator.top())
-    {
-        _tcnt1 = 0;
-        _tov1 = 1;
-        //depends on com1 mode
-        _oc1a = !_oc1a;
-
-        emit tov1Changed();
-        emit oc1aChanged();
-    }
-    else
-    {
-        ++_tcnt1;
-    }
-}
-
-void AtmegaTimer::phaseCorrectStep()
-{
-
-}
-
-void AtmegaTimer::phaseAndFrequencyCorrectStep()
-{
-
+    return _outputMode;
 }

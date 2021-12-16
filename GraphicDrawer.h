@@ -17,6 +17,7 @@ public:
 
     void setStartingState();
     void buildCoordinates();
+    void updateCoordinates();
 
 public slots:
 
@@ -84,6 +85,9 @@ private:
 
     void buildCoordinateYMap();
     void buildCoordinateXMap();
+
+    void determineDeltas();
+    void refreshDeltas();
 
     void buildCoordinateFixedYMap();
     void buildCoordinateFixedXMap();
