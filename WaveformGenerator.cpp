@@ -1,9 +1,10 @@
 #include "WaveFormGenerator.h"
 
-WaveFormGenerator::WaveFormGenerator(int ocr1a, int icr1, Mode mode): _ocr1aBuffer(ocr1a), _ocr1a(0), _icr1(icr1),
-                                                                       _mode(mode), _reg(0),
-                                                                       _wgm13(0), _wgm12(0),
-                                                                       _wgm11(0), _wgm10(0)
+WaveFormGenerator::WaveFormGenerator(int ocr1a, int ocr1b, int icr1, Mode mode): _ocr1aBuffer(ocr1a), _ocr1bBuffer(ocr1b),
+                                                                                 _ocr1a(0), _ocr1b(0), _icr1(icr1),
+                                                                                 _mode(mode), _reg(0),
+                                                                                 _wgm13(0), _wgm12(0),
+                                                                                 _wgm11(0), _wgm10(0)
 {
     _reg = static_cast<int>(_mode);
     _wgm10 = 0x0001 & _reg;
@@ -12,8 +13,9 @@ WaveFormGenerator::WaveFormGenerator(int ocr1a, int icr1, Mode mode): _ocr1aBuff
     _wgm13 = 0x0008 & _reg;
 }
 
-WaveFormGenerator::WaveFormGenerator(int ocr1a, int icr1, bool wgm13,
-                                     bool wgm12, bool wgm11, bool wgm10): _ocr1aBuffer(ocr1a), _ocr1a(0), _icr1(icr1),
+WaveFormGenerator::WaveFormGenerator(int ocr1a, int ocr1b, int icr1, bool wgm13,
+                                     bool wgm12, bool wgm11, bool wgm10): _ocr1aBuffer(ocr1a),  _ocr1bBuffer(ocr1b),
+                                                                          _ocr1a(0), _ocr1b(0), _icr1(icr1),
                                                                           _wgm13(wgm13), _wgm12(wgm12),
                                                                           _wgm11(wgm11), _wgm10(wgm10),
                                                                           _reg(0), _mode(WaveFormGenerator::Mode::Normal)
@@ -66,14 +68,29 @@ void WaveFormGenerator::setOcr1a(int newVal)
     _ocr1a = newVal;
 }
 
+void WaveFormGenerator::setOcr1b(int newVal)
+{
+    _ocr1b = newVal;
+}
+
 void WaveFormGenerator::setOcr1aBuffer(int newVal)
 {
     _ocr1aBuffer = newVal;
 }
 
+void WaveFormGenerator::setOcr1bBuffer(int newVal)
+{
+    _ocr1bBuffer = newVal;
+}
+
 void WaveFormGenerator::loadOcr1aFromBuffer()
 {
     _ocr1a = _ocr1aBuffer;
+}
+
+void WaveFormGenerator::loadOcr1bFromBuffer()
+{
+    _ocr1b = _ocr1bBuffer;
 }
 
 void WaveFormGenerator::setMode(Mode mode)
@@ -116,7 +133,7 @@ int WaveFormGenerator::top() const
     }
 }
 
-int  WaveFormGenerator::comparableValue()
+int  WaveFormGenerator::comparableValueA()
 {
     switch(_mode)
     {
@@ -129,6 +146,26 @@ int  WaveFormGenerator::comparableValue()
         case Mode::FastPWMIcr: case Mode::PWMPhFrIcr: case Mode::PWMPhIcr:
         case Mode::CTCOcr: case Mode::FastPWMOcr: case Mode::PWMPhFrOcr:
         case Mode::PWMPhOcr: return _ocr1a;
+
+        case Mode::Reserved: return 0; //not used
+
+        default: throw std::exception();
+    }
+}
+
+int  WaveFormGenerator::comparableValueB()
+{
+    switch(_mode)
+    {
+        case Mode::Normal: return Max;
+
+        case Mode::CTCIcr: return _icr1;
+
+        case Mode::PWM8Ph: case Mode::FastPWM8: case Mode::PWM9Ph:
+        case Mode::FastPWM9: case Mode::PWM10Ph: case Mode::FastPWM10:
+        case Mode::FastPWMIcr: case Mode::PWMPhFrIcr: case Mode::PWMPhIcr:
+        case Mode::CTCOcr: case Mode::FastPWMOcr: case Mode::PWMPhFrOcr:
+        case Mode::PWMPhOcr: return _ocr1b;
 
         case Mode::Reserved: return 0; //not used
 

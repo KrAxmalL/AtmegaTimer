@@ -5,7 +5,7 @@ MainWindow::MainWindow(QWidget *parent):
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     _scene(new QGraphicsScene),
-    _atmegaTimer(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+    _atmegaTimer(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
     _graphicDrawer(*_scene, _atmegaTimer, parent)
 {
     ui->setupUi(this);
@@ -40,19 +40,23 @@ void MainWindow::initConnections()
     //com registers
     connect(ui->com1a0Button, &QPushButton::pressed, this, &MainWindow::changeCom1a0);
     connect(ui->com1a1Button, &QPushButton::pressed, this, &MainWindow::changeCom1a1);
+    connect(ui->com1b0Button, &QPushButton::pressed, this, &MainWindow::changeCom1b0);
+    connect(ui->com1b1Button, &QPushButton::pressed, this, &MainWindow::changeCom1b1);
 
     //clks
     connect(ui->clkButton, &QPushButton::pressed, this, &MainWindow::setClk);
     connect(ui->t1Button, &QPushButton::pressed, this, &MainWindow::setT1);
 
-    //ocr1a and icr1
+    //ocr1a, ocr1b and icr1
     connect(ui->ocr1aButton, &QPushButton::pressed, this, &MainWindow::setOcr1a);
+    connect(ui->ocr1bButton, &QPushButton::pressed, this, &MainWindow::setOcr1b);
     connect(ui->icr1Button, &QPushButton::pressed, this, &MainWindow::setIcr1);
     connect(&_atmegaTimer, &AtmegaTimer::topChanged, this, &MainWindow::changeTop);
 
     //overflows
     connect(&_atmegaTimer, &AtmegaTimer::tov1Changed, this, &MainWindow::changeTov1);
     connect(&_atmegaTimer, &AtmegaTimer::oc1aChanged, this, &MainWindow::changeOc1a);
+    connect(&_atmegaTimer, &AtmegaTimer::oc1bChanged, this, &MainWindow::changeOc1b);
     connect(&_atmegaTimer, &AtmegaTimer::actualClkChanged, this, &MainWindow::changeActualClk);
 
     //timers for drawing graphic and counter values
@@ -73,17 +77,21 @@ void MainWindow::initLabels()
 
     ui->com1a0Label->setText(QString("COM1A0: " + QString::number(_atmegaTimer.com1a0())));
     ui->com1a1Label->setText(QString("COM1A1: " + QString::number(_atmegaTimer.com1a1())));
+    ui->com1b0Label->setText(QString("COM1B0: " + QString::number(_atmegaTimer.com1b0())));
+    ui->com1b1Label->setText(QString("COM1B1: " + QString::number(_atmegaTimer.com1b1())));
 
     ui->clkLabel->setText(QString("CLK: " + QString::number(_atmegaTimer.clk())));
     ui->t1Label->setText(QString("T1: " + QString::number(_atmegaTimer.t1())));
     ui->actualClkLabel->setText(QString("Actual CLK: " + QString::number(_atmegaTimer.actualClk())));
 
     ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1a())));
+    ui->ocr1bLabel->setText(QString("OCR1B: " + QString::number(_atmegaTimer.ocr1b())));
     ui->icr1Label->setText(QString("ICR1: " + QString::number(_atmegaTimer.icr1())));
 
     ui->topLabel->setText("TOP: " + QString::number(_atmegaTimer.top()));
     ui->tov1Label->setText("TOV1: " + QString::number(_atmegaTimer.tov1()));
     ui->oc1aLabel->setText("OC1A: " + QString::number(_atmegaTimer.oc1a()));
+    ui->oc1bLabel->setText("OC1B: " + QString::number(_atmegaTimer.oc1b()));
 }
 
 void MainWindow::init()
@@ -140,7 +148,9 @@ void MainWindow::stopButtonPressed()
 void MainWindow::clearButtonPressed()
 {
     _atmegaTimer.setOc1a(0);
+    _atmegaTimer.setOc1b(0);
     changeOc1a();
+    changeOc1b();
     _atmegaTimer.setTov1(0);
     changeTov1();
     _graphicDrawer.setStartingState();
@@ -231,6 +241,24 @@ void MainWindow::changeCom1a1()
     bool newVal = !_atmegaTimer.com1a1();
     _atmegaTimer.setCom1a1(newVal);
     ui->com1a1Label->setText(QString("COM1A1: " + QString::number(_atmegaTimer.com1a1())));
+
+    setStartButtonState();
+}
+
+void MainWindow::changeCom1b0()
+{
+    bool newVal = !_atmegaTimer.com1b0();
+    _atmegaTimer.setCom1b0(newVal);
+    ui->com1b0Label->setText(QString("COM1B0: " + QString::number(_atmegaTimer.com1b0())));
+
+    setStartButtonState();
+}
+
+void MainWindow::changeCom1b1()
+{
+    bool newVal = !_atmegaTimer.com1b1();
+    _atmegaTimer.setCom1b1(newVal);
+    ui->com1b1Label->setText(QString("COM1B1: " + QString::number(_atmegaTimer.com1b1())));
 
     setStartButtonState();
 }
@@ -341,6 +369,37 @@ void MainWindow::setOcr1a()
     }
 }
 
+void MainWindow::setOcr1b()
+{
+    timer.stop();
+
+    bool isOkPressed = false;
+    QInputDialog dialog;
+    dialog.setInputMode(QInputDialog::IntInput);
+    int newVal = dialog.getInt(this, "Enter OCR1B value", "Enter OCR1B value: ", 10, WaveFormGenerator::Bottom, WaveFormGenerator::Max, 1, &isOkPressed);
+    if(isOkPressed)
+    {
+        if(newVal < WaveFormGenerator::Bottom || newVal > WaveFormGenerator::Max)
+        {
+            QMessageBox mb;
+            mb.setText("Wrong input, enter value between " + QString::number(WaveFormGenerator::Bottom)
+                       + " and " + QString::number(WaveFormGenerator::Max));
+            mb.exec();
+        }
+        else
+        {
+            _atmegaTimer.setOcr1b(newVal);
+            if(!_isDrawing)
+            {
+                _atmegaTimer.loadOcr1bFromBuffer();
+            }
+            _graphicDrawer.updateCoordinates();
+            ui->ocr1bLabel->setText(QString("OCR1B: " + QString::number(_atmegaTimer.ocr1bBuffer())));
+            setStartButtonState();
+        }
+    }
+}
+
 void MainWindow::setIcr1()
 {
     timer.stop();
@@ -383,11 +442,18 @@ void MainWindow::changeOc1a()
     ui->oc1aLabel->setText("OC1A: " + QString::number(_atmegaTimer.oc1a()));
 }
 
+void MainWindow::changeOc1b()
+{
+    ui->oc1bLabel->setText("OC1B: " + QString::number(_atmegaTimer.oc1b()));
+}
+
 void MainWindow::disableRuntimeChangingButtons()
 {
     ui->clkButton->setEnabled(false);
     ui->com1a0Button->setEnabled(false);
     ui->com1a1Button->setEnabled(false);
+    ui->com1b0Button->setEnabled(false);
+    ui->com1b1Button->setEnabled(false);
     ui->cs10Button->setEnabled(false);
     ui->cs11Button->setEnabled(false);
     ui->cs12Button->setEnabled(false);
@@ -403,6 +469,8 @@ void MainWindow::enableRuntimeChangingButtons()
     ui->clkButton->setEnabled(true);
     ui->com1a0Button->setEnabled(true);
     ui->com1a1Button->setEnabled(true);
+    ui->com1b0Button->setEnabled(true);
+    ui->com1b1Button->setEnabled(true);
     ui->cs10Button->setEnabled(true);
     ui->cs11Button->setEnabled(true);
     ui->cs12Button->setEnabled(true);

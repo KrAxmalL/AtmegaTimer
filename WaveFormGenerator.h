@@ -54,8 +54,8 @@ public:
     static constexpr int Top_9bit = 0x01FF;
     static constexpr int Top_10bit = 0x03FF;
 
-    WaveFormGenerator(int ocr1a, int icr1, Mode mode);
-    WaveFormGenerator(int ocr1a, int icr1, bool wgm13, bool wgm12, bool wgm11, bool wgm10);
+    WaveFormGenerator(int ocr1a, int ocr1b, int icr1, Mode mode);
+    WaveFormGenerator(int ocr1a, int ocr1b, int icr1, bool wgm13, bool wgm12, bool wgm11, bool wgm10);
 
     ~WaveFormGenerator();
 
@@ -65,19 +65,15 @@ public:
     inline bool wgm13() const {return _wgm13;}
 
     inline int ocr1a() const {return _ocr1a;}
+    inline int ocr1b() const {return _ocr1b;}
     inline int ocr1aBuffer() const {return _ocr1aBuffer;}
+    inline int ocr1bBuffer() const {return _ocr1bBuffer;}
     inline int icr1() const {return _icr1;}
 
     inline Mode mode() const {return _mode;}
 
     RegUpdateMode regUpdateMode() const;
     Tov1UpdateMode tov1UpdateMode() const;
-
-    /*bool isNormalMode();
-    bool isCtcMode();
-    bool isFastPwmMode();
-    bool isPhaseCorrectMode();
-    bool isPhaseAndFrequencyCorrectMode();*/
 
     void setWgm10(bool newVal);
     void setWgm11(bool newVal);
@@ -86,8 +82,11 @@ public:
 
     void setIcr1(int newVal);
     void setOcr1a(int newVal);
+    void setOcr1b(int newVal);
     void setOcr1aBuffer(int newVal);
+    void setOcr1bBuffer(int newVal);
     void loadOcr1aFromBuffer();
+    void loadOcr1bFromBuffer();
 
     void setMode(Mode mode);
 
@@ -95,7 +94,8 @@ public:
 
     int top() const;
 
-    int comparableValue();
+    int comparableValueA();
+    int comparableValueB();
 
 private:
 
@@ -110,9 +110,11 @@ private:
     bool _wgm13;
 
     int _ocr1a;
+    int _ocr1b;
     int _icr1;
 
     int _ocr1aBuffer;
+    int _ocr1bBuffer;
 
     int _reg;
 

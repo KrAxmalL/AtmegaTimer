@@ -41,7 +41,7 @@ private:
 
     //coordinates for tcnt graphic
     static constexpr qreal _tcntStartX = _ox0;
-    static constexpr qreal _tcntStartY = _oy0 - 100;
+    static constexpr qreal _tcntStartY = _oy0 - 110;
 
     qreal _tcntPrevX;
     qreal _tcntPrevY;
@@ -56,7 +56,7 @@ private:
 
     //coordinates for oc1a graphic
     static constexpr qreal _oc1aStartX = _ox0;
-    static constexpr qreal _oc1aStartY = _oy0 - 50;
+    static constexpr qreal _oc1aStartY = _oy0 - 30;
 
     qreal _oc1aPrevX;
     qreal _oc1aPrevY;
@@ -66,6 +66,19 @@ private:
 
     qreal _oc1aYDelta = -20;
     qreal _oc1aXDelta = 0;
+
+    //coordinates for oc1b graphic
+    static constexpr qreal _oc1bStartX = _ox0;
+    static constexpr qreal _oc1bStartY = _oy0 - 70;
+
+    qreal _oc1bPrevX;
+    qreal _oc1bPrevY;
+
+    qreal _oc1bNewX;
+    qreal _oc1bNewY;
+
+    qreal _oc1bYDelta = -20;
+    qreal _oc1bXDelta = 0;
 
     int _stepsToReachMax = 0;
 
@@ -83,14 +96,24 @@ private:
     void drawNextPhaseCorrectPwmMode();
     void drawNextPhaseFrequencyCorrectMode();
 
+    void updateTcntCoordinates();
+    void updateOc1aCoordinates();
+    void updateOc1bCoordinates();
+
+    void updateOc1a();
+    void updateOc1b();
+    void updateTov1();
+
+    void dropTcntToBottom();
+    void setTcntDecreasing();
+
     void buildCoordinateYMap();
     void buildCoordinateXMap();
 
-    void determineDeltas();
-    void refreshDeltas();
-
-    void buildCoordinateFixedYMap();
-    void buildCoordinateFixedXMap();
+    void determineDeltasA();
+    void determineDeltasB();
+    void refreshDeltasA();
+    void refreshDeltasB();
 
     int getNeededTopValue();
 

@@ -115,7 +115,7 @@
    <widget class="QWidget" name="gridLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>920</x>
       <y>500</y>
       <width>254</width>
       <height>52</height>
@@ -184,9 +184,9 @@
    <widget class="QWidget" name="gridLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>920</x>
       <y>560</y>
-      <width>340</width>
+      <width>261</width>
       <height>51</height>
      </rect>
     </property>
@@ -272,36 +272,22 @@
    <widget class="QWidget" name="gridLayoutWidget_3">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>920</x>
       <y>620</y>
-      <width>411</width>
+      <width>471</width>
       <height>51</height>
      </rect>
     </property>
     <layout class="QGridLayout" name="gridLayout_3">
-     <item row="2" column="1">
-      <widget class="QLabel" name="icr1Label">
+     <item row="2" column="4">
+      <widget class="QLabel" name="topLabel">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
         </font>
        </property>
        <property name="text">
-        <string>ICR1: </string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="0">
-      <widget class="QPushButton" name="ocr1aButton">
-       <property name="text">
-        <string>Set</string>
-       </property>
-      </widget>
-     </item>
-     <item row="0" column="1">
-      <widget class="QPushButton" name="icr1Button">
-       <property name="text">
-        <string>Set</string>
+        <string>TOP: </string>
        </property>
       </widget>
      </item>
@@ -317,15 +303,48 @@
        </property>
       </widget>
      </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="ocr1aButton">
+       <property name="text">
+        <string>Set</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QPushButton" name="ocr1bButton">
+       <property name="text">
+        <string>Set</string>
+       </property>
+      </widget>
+     </item>
      <item row="2" column="2">
-      <widget class="QLabel" name="topLabel">
+      <widget class="QLabel" name="ocr1bLabel">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
         </font>
        </property>
        <property name="text">
-        <string>TOP: </string>
+        <string>OCR1B: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="3">
+      <widget class="QPushButton" name="icr1Button">
+       <property name="text">
+        <string>Set</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="3">
+      <widget class="QLabel" name="icr1Label">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>ICR1: </string>
        </property>
       </widget>
      </item>
@@ -334,7 +353,7 @@
    <widget class="QWidget" name="gridLayoutWidget_6">
     <property name="geometry">
      <rect>
-      <x>1140</x>
+      <x>1130</x>
       <y>680</y>
       <width>201</width>
       <height>51</height>
@@ -415,7 +434,7 @@
    <widget class="QWidget" name="gridLayoutWidget_4">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>920</x>
       <y>680</y>
       <width>201</width>
       <height>52</height>
@@ -446,7 +465,7 @@
    <widget class="QWidget" name="verticalLayoutWidget">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>920</x>
       <y>0</y>
       <width>454</width>
       <height>493</height>
@@ -483,7 +502,7 @@
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;OCR1A, ICR1A - регістри, які зберігають значення, з якими порівнюється значення лічильника таймера. &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:10pt;&quot;&gt;OCR1A, OCR1B, ICR1A - регістри, які зберігають значення, з якими порівнюється значення лічильника таймера. &lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
@@ -536,8 +555,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;COM1A0, 1 - Compare Output Mode.&lt;/span&gt;&lt;/p&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;Призначені для вибору режиму роботи виходу OC1A.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:11pt;&quot;&gt;COM1A0, COM1A1, COM1B0, COM1B1 - Compare Output Mode. Призначені для вибору режиму роботи виходу OC1A.&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
@@ -573,7 +591,7 @@ p, li { white-space: pre-wrap; }
 &lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
 p, li { white-space: pre-wrap; }
 &lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
-&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;OC1A - флаг, який встановлюється при досягненні лічильником заданого значення. Режим роботи контролюється через COM1A0 та COM1A1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+&lt;p style=&quot; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-size:9pt;&quot;&gt;OC1A, OC1B - флаги, які встановлюються при досягненні лічильником заданого значення. Режим роботи контролюється через COM1A0, COM1A1, COM1B0, COM1B1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
          </property>
         </widget>
        </item>
@@ -652,7 +670,7 @@ p, li { white-space: pre-wrap; }
    <widget class="QLabel" name="actualClkLabel">
     <property name="geometry">
      <rect>
-      <x>930</x>
+      <x>920</x>
       <y>740</y>
       <width>151</width>
       <height>31</height>
@@ -670,15 +688,27 @@ p, li { white-space: pre-wrap; }
    <widget class="QWidget" name="horizontalLayoutWidget_2">
     <property name="geometry">
      <rect>
-      <x>1140</x>
+      <x>1130</x>
       <y>740</y>
-      <width>141</width>
+      <width>231</width>
       <height>31</height>
      </rect>
     </property>
     <layout class="QHBoxLayout" name="horizontalLayout_2">
      <item>
       <widget class="QLabel" name="oc1aLabel">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>OC1A: </string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="oc1bLabel">
        <property name="font">
         <font>
          <pointsize>12</pointsize>
@@ -698,6 +728,56 @@ p, li { white-space: pre-wrap; }
        </property>
        <property name="text">
         <string>TOV1: </string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="gridLayoutWidget_8">
+    <property name="geometry">
+     <rect>
+      <x>1190</x>
+      <y>560</y>
+      <width>201</width>
+      <height>51</height>
+     </rect>
+    </property>
+    <layout class="QGridLayout" name="gridLayout_9">
+     <item row="2" column="1">
+      <widget class="QLabel" name="com1b0Label">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>COM1B0: </string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QPushButton" name="com1b1Button">
+       <property name="text">
+        <string>Toggle</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="1">
+      <widget class="QPushButton" name="com1b0Button">
+       <property name="text">
+        <string>Toggle</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0">
+      <widget class="QLabel" name="com1b1Label">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+        </font>
+       </property>
+       <property name="text">
+        <string>COM1B1: </string>
        </property>
       </widget>
      </item>

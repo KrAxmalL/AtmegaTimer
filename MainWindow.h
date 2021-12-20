@@ -42,6 +42,8 @@ public slots:
     //compare output registers change
     void changeCom1a0();
     void changeCom1a1();
+    void changeCom1b0();
+    void changeCom1b1();
 
     //clock frequency setting
     void setClk();
@@ -50,12 +52,14 @@ public slots:
 
     //compare registers setting
     void setOcr1a();
+    void setOcr1b();
     void setIcr1();
     void changeTop();
 
     //overflow and compare output flags change
     void changeTov1();
     void changeOc1a();
+    void changeOc1b();
 
 private:
 

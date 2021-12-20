@@ -1,18 +1,22 @@
 #include "AtmegaTimer.h"
 
-AtmegaTimer::AtmegaTimer(long t1, long inputFrequency, int icr1, int ocr1a,
+AtmegaTimer::AtmegaTimer(long t1, long inputFrequency, int icr1, int ocr1a, int ocr1b,
                          bool wgm13, bool wgm12, bool wgm11, bool wgm10,
-                         bool cs12, bool cs11, bool cs10, bool com1a1, bool com1a0):
-                         _tcnt1(0), _tov1(false), _oc1a(false),
-                         _waveFormGenerator(ocr1a, icr1, wgm13, wgm12, wgm11, wgm10),
+                         bool cs12, bool cs11, bool cs10, bool com1a1, bool com1a0, bool com1b1, bool com1b0):
+                         _tcnt1(0), _tov1(false), _oc1a(false), _oc1b(false),
+                         _waveFormGenerator(ocr1a, ocr1b, icr1, wgm13, wgm12, wgm11, wgm10),
                          _clockSelect(t1, inputFrequency, cs12, cs11, cs10),
-                         _com1a1(com1a1), _com1a0(com1a0)
+                         _com1a1(com1a1), _com1a0(com1a0), _com1b1(com1b1), _com1b0(com1b0)
 {
     int mode = 0;
     mode = setBitNToX(mode, 0, _com1a0);
     mode = setBitNToX(mode, 1, _com1a1);
+    _outputModeA = static_cast<AtmegaTimer::OutputCompareMode>(mode);
 
-    _outputMode = static_cast<AtmegaTimer::OutputCompareMode>(mode);
+    mode = 0;
+    mode = setBitNToX(mode, 0, _com1b0);
+    mode = setBitNToX(mode, 1, _com1b1);
+    _outputModeB = static_cast<AtmegaTimer::OutputCompareMode>(mode);
 }
 
 AtmegaTimer::~AtmegaTimer() {}
@@ -62,9 +66,19 @@ int AtmegaTimer::ocr1a()
     return _waveFormGenerator.ocr1a();
 }
 
+int AtmegaTimer::ocr1b()
+{
+    return _waveFormGenerator.ocr1b();
+}
+
 int AtmegaTimer::ocr1aBuffer()
 {
     return _waveFormGenerator.ocr1aBuffer();
+}
+
+int AtmegaTimer::ocr1bBuffer()
+{
+    return _waveFormGenerator.ocr1bBuffer();
 }
 
 bool AtmegaTimer::wgm10() const
@@ -105,21 +119,41 @@ void AtmegaTimer::setCom1a0(bool newVal)
 {
     _com1a0 = newVal;
 
-    int mode = static_cast<int>(_outputMode);
+    int mode = static_cast<int>(_outputModeA);
     mode = setBitNToX(mode, 0, _com1a0);
-    _outputMode = static_cast<AtmegaTimer::OutputCompareMode>(mode);
+    _outputModeA = static_cast<AtmegaTimer::OutputCompareMode>(mode);
 }
 
 void AtmegaTimer::setCom1a1(bool newVal)
 {
     _com1a1 = newVal;
 
-    int mode = static_cast<int>(_outputMode);
+    int mode = static_cast<int>(_outputModeA);
     mode = setBitNToX(mode, 1, _com1a1);
-    _outputMode = static_cast<AtmegaTimer::OutputCompareMode>(mode);
+    _outputModeA = static_cast<AtmegaTimer::OutputCompareMode>(mode);
+}
+
+void AtmegaTimer::setCom1b0(bool newVal)
+{
+    _com1b0 = newVal;
+
+    int mode = static_cast<int>(_outputModeB);
+    mode = setBitNToX(mode, 0, _com1b0);
+    _outputModeB = static_cast<AtmegaTimer::OutputCompareMode>(mode);
+}
+
+void AtmegaTimer::setCom1b1(bool newVal)
+{
+    _com1b1 = newVal;
+
+    int mode = static_cast<int>(_outputModeB);
+    mode = setBitNToX(mode, 1, _com1b1);
+    _outputModeB = static_cast<AtmegaTimer::OutputCompareMode>(mode);
 }
 
 void AtmegaTimer::setOc1a(bool newVal) { _oc1a = newVal; }
+
+void AtmegaTimer::setOc1b(bool newVal) { _oc1b = newVal; }
 
 void AtmegaTimer::setTov1(bool newVal) { _tov1 = newVal; }
 
@@ -129,13 +163,22 @@ void AtmegaTimer::setT1(long frequency) { _clockSelect.setT1(frequency); emit ac
 
 void AtmegaTimer::setOcr1a(int val) { _waveFormGenerator.setOcr1aBuffer(val); }
 
+void AtmegaTimer::setOcr1b(int val) { _waveFormGenerator.setOcr1bBuffer(val); }
+
 void AtmegaTimer::loadOcr1aFromBuffer() {_waveFormGenerator.loadOcr1aFromBuffer(); emit topChanged();}
+
+void AtmegaTimer::loadOcr1bFromBuffer() {_waveFormGenerator.loadOcr1bFromBuffer();}
 
 void AtmegaTimer::setIcr1(int val) { _waveFormGenerator.setIcr1(val); emit topChanged(); }
 
-int AtmegaTimer::comparableValue()
+int AtmegaTimer::comparableValueA()
 {
-    return _waveFormGenerator.comparableValue();
+    return _waveFormGenerator.comparableValueA();
+}
+
+int AtmegaTimer::comparableValueB()
+{
+    return _waveFormGenerator.comparableValueB();
 }
 
 WaveFormGenerator::Mode AtmegaTimer::timerMode()
@@ -148,7 +191,12 @@ ClockSelect::State AtmegaTimer::timerState()
     return _clockSelect.state();
 }
 
-AtmegaTimer::OutputCompareMode AtmegaTimer::outputMode()
+AtmegaTimer::OutputCompareMode AtmegaTimer::outputModeA()
 {
-    return _outputMode;
+    return _outputModeA;
+}
+
+AtmegaTimer::OutputCompareMode AtmegaTimer::outputModeB()
+{
+    return _outputModeB;
 }
