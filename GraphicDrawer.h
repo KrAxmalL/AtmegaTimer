@@ -32,7 +32,8 @@ private:
 
     static constexpr int _drawingSteps = 300;
     int _performedSteps;
-    int _actualSteps = -1;
+    int _stepsForZeroCtc = 0;
+    int _stepsForDivision = 0;
 
     //coordinates of ox and oy
     static constexpr qreal _ox0 = -400;

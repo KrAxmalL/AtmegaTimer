@@ -69,9 +69,6 @@ void GraphicDrawer::drawNextCtcMode()
         updateOc1aCoordinates();
         updateOc1bCoordinates();
 
-        bool reachedA = false;
-        bool reachedB = false;
-
         if(_performedSteps == _stepsToReachMax) //add check that reached max possible value - 65535
         {
             _reachedTop = true;
@@ -79,31 +76,66 @@ void GraphicDrawer::drawNextCtcMode()
 
         if(_performedSteps <= _drawingSteps)
         {
-            //replace comparableValue with register value
-            if(_performedSteps == 0)
+            bool zeroTop = equal(getNeededTopValue(), 0);
+
+            if(zeroTop)
             {
-                reachedA = _atmegaTimer.comparableValueA() <=  _yCoordinateToBorder[_performedSteps];
-                reachedB = _atmegaTimer.comparableValueB() <=  _yCoordinateToBorder[_performedSteps];
+                if(_performedSteps == _drawingSteps)
+                {
+                    _reachedTop = true;
+                }
+
+                //доробити - не зовсім рівно малюється
+                 qInfo() << "performed steps: " << _performedSteps << "\n";
+                 qInfo() << "zero ctc steps: " << _stepsForZeroCtc << "\n";
+                 qInfo() << "remainder: " << _stepsForDivision % _stepsForZeroCtc << "\n";
+                bool changeNeeded = (_stepsForDivision > 0) && ((_stepsForDivision % _stepsForZeroCtc) == 0);
+                if(changeNeeded)
+                {
+                    updateOc1a();
+
+                }
+                else
+                {
+                    //++_stepsForDivision;
+                }
+                /*if(_performedSteps > 0)
+                {
+                    ++_stepsForDivision;
+                }*/
+
             }
             else
             {
-                reachedA = inRange(_atmegaTimer.comparableValueA(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
-                reachedB = inRange(_atmegaTimer.comparableValueB(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
-            }
+                bool reachedA = false;
+                bool reachedB = false;
 
-            if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps]))
-            {
-                _reachedTop = true;
-            }
+                if(_performedSteps == 0)
+                {
+                    reachedA = _atmegaTimer.comparableValueA() <=  _yCoordinateToBorder[_performedSteps];
+                    reachedB = _atmegaTimer.comparableValueB() <=  _yCoordinateToBorder[_performedSteps];
+                }
+                else
+                {
+                    reachedA = inRange(_atmegaTimer.comparableValueA(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
+                    reachedB = inRange(_atmegaTimer.comparableValueB(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
+                }
 
-            if(reachedA/*equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps])*/)
-            {
-                updateOc1a();
-            }
+                if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps]))
+                {
+                    qInfo() << "reachedd top in CTC in steps: " << _performedSteps << "\n";
+                    _reachedTop = true;
+                }
 
-            if(reachedB)
-            {
-                updateOc1b();
+                if(reachedA/*equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps])*/)
+                {
+                    updateOc1a();
+                }
+
+                if(reachedB)
+                {
+                    updateOc1b();
+                }
             }
         }
 
@@ -508,6 +540,8 @@ void GraphicDrawer::setStartingState()
     _yDelta = 0;
 
     _performedSteps = 0;
+    _stepsForZeroCtc = 0;
+    _stepsForDivision = 0;
 
     _reachedTop = false;
     _isGoingUp = true;
@@ -1048,7 +1082,14 @@ void GraphicDrawer::buildCoordinateYMap()
     //int yStep = _atmegaTimer.top() / _drawingSteps; //build from maximum value of timer
     qreal yStep = (qreal)getNeededTopValue()/*_atmegaTimer.top()*/ / (qreal)_drawingSteps;
 
-    _stepsToReachMax = 65535 / yStep;
+    if(getNeededTopValue() == 0)
+    {
+        _stepsToReachMax = _drawingSteps;
+    }
+    else
+    {
+       _stepsToReachMax = 65535 / yStep;
+    }
 
     //qInfo() << "YStep is: " << yStep << "\n";//int value = 0;
     qreal value = 0.0;
@@ -1069,22 +1110,45 @@ void GraphicDrawer::buildCoordinateYMap()
         _yDelta = -_yDelta;
     }
     qInfo() << "yDelta is: " << _yDelta << "\n";
-    qreal diff = prevDelta / _yDelta;
+    qreal diff = 1;
+    if(!equal(prevDelta, _yDelta))
+    {
+        diff = prevDelta / _yDelta;
+    }
     _performedSteps *= diff;
     //_performedSteps = 0;
 }
 
 void GraphicDrawer::buildCoordinateXMap()
 {
+    qreal pixelsNeeded = 0;
     int actualSteps = getNeededTopValue();
+    if(actualSteps == 0)
+    {
+        pixelsNeeded = _xDistanceBetweenPoints;
+        if(_atmegaTimer.actualClk() == 0)
+        {
+             _stepsForZeroCtc = 0;
+        }
+        else
+        {
+            _stepsForZeroCtc = 2 * (_drawingSteps / _atmegaTimer.actualClk());
+        }
+    }
+    else
+    {
+        //add the calculation for other modes
+        qreal secondsNeeded = (qreal)actualSteps/*_atmegaTimer.top()*/ / (qreal)_atmegaTimer.actualClk();
+        pixelsNeeded = _xDistanceBetweenPoints * secondsNeeded;
+    }
 
-    //add the calculation for other modes
-    qreal secondsNeeded = (qreal)actualSteps/*_atmegaTimer.top()*/ / (qreal)_atmegaTimer.actualClk();
-    qreal pixelsNeeded = _xDistanceBetweenPoints * secondsNeeded;
     _xDelta = pixelsNeeded / (qreal)_drawingSteps;
+
     //_oc1aXDelta = _xDelta;
 
+    qInfo() << "pixels needed: " << pixelsNeeded << "\n";
     qInfo() << "xDelta is: " << _xDelta << "\n";
+    qInfo() << "steps for zeroCtc: " << _stepsForZeroCtc << "\n";
 }
 
  int GraphicDrawer::getNeededTopValue()
