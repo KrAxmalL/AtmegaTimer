@@ -59,8 +59,7 @@ void MainWindow::initConnections()
     connect(&_atmegaTimer, &AtmegaTimer::oc1bChanged, this, &MainWindow::changeOc1b);
     connect(&_atmegaTimer, &AtmegaTimer::actualClkChanged, this, &MainWindow::changeActualClk);
 
-    //timers for drawing graphic and counter values
-    //connect(&timer, &QTimer::timeout, this, &MainWindow::executeProgram);
+    //timer for drawing graphic
     connect(&timer, &QTimer::timeout, &_graphicDrawer, &GraphicDrawer::drawNextLines);
 }
 
@@ -100,7 +99,6 @@ void MainWindow::init()
     timer.setInterval(std::chrono::milliseconds(10));
 
     //init graphicsView
-
     QGraphicsView* view = ui->graphics;
     view->setScene(_scene);
 
@@ -121,11 +119,9 @@ void MainWindow::startButtonPressed()
         if(_isDrawing)
         {
             _graphicDrawer.updateCoordinates();
-            //_graphicDrawer.buildCoordinates();
         }
         else
         {
-            //_graphicDrawer.updateCoordinates();
             _graphicDrawer.buildCoordinates();
         }
     }
@@ -151,11 +147,15 @@ void MainWindow::clearButtonPressed()
     _atmegaTimer.setOc1b(0);
     changeOc1a();
     changeOc1b();
+
     _atmegaTimer.setTov1(0);
     changeTov1();
+
     _graphicDrawer.setStartingState();
+
     enableRuntimeChangingButtons();
     setStartButtonState();
+
     _stopped = false;
     _isDrawing = false;
 }
@@ -549,7 +549,8 @@ void MainWindow::recalculateCurrentRegisterValue()
     if(_atmegaTimer.ocr1a() < ocr1aMin)
     {
         _atmegaTimer.setOcr1a(ocr1aMin);
-         ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1a())));
+        _atmegaTimer.loadOcr1aFromBuffer();
+        ui->ocr1aLabel->setText(QString("OCR1A: " + QString::number(_atmegaTimer.ocr1a())));
     }
 
     int icr1Min = getMinIcr1Value();

@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QGraphicsView>
+#include <QGraphicsTextItem>
 #include <QDebug>
 
 #include "AtmegaTimer.h"
@@ -56,7 +57,7 @@ private:
 
     //coordinates for oc1a graphic
     static constexpr qreal _oc1aStartX = _ox0;
-    static constexpr qreal _oc1aStartY = _oy0 - 30;
+    static constexpr qreal _oc1aStartY = _oy0 - 20;
 
     qreal _oc1aPrevX;
     qreal _oc1aPrevY;
