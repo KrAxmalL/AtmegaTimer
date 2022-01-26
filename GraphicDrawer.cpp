@@ -41,8 +41,6 @@ void GraphicDrawer::drawNextNormalMode()
     _scene.addLine(QLine(_tcntPrevX, _tcntPrevY, _tcntNewX, _tcntNewY), QPen(Qt::GlobalColor::black));
 }
 
-//закінчити
-//але додатково перевірити на малих та крайнії значеннях
 void GraphicDrawer::drawNextCtcMode()
 {
     int prevOcr1a = _atmegaTimer.ocr1a();
@@ -52,12 +50,7 @@ void GraphicDrawer::drawNextCtcMode()
         updateCoordinates();
     }
 
-    //int prevOcr1b = _atmegaTimer.ocr1b();
     _atmegaTimer.loadOcr1bFromBuffer();
-    /*if(prevOcr1b != _atmegaTimer.ocr1b())
-    {
-        updateCoordinates();
-    }*/
 
     if(_reachedTop)
     {
@@ -69,7 +62,7 @@ void GraphicDrawer::drawNextCtcMode()
         updateOc1aCoordinates();
         updateOc1bCoordinates();
 
-        if(_performedSteps == _stepsToReachMax) //add check that reached max possible value - 65535
+        if(_performedSteps == _stepsToReachMax)
         {
             _reachedTop = true;
         }
@@ -85,24 +78,17 @@ void GraphicDrawer::drawNextCtcMode()
                     _reachedTop = true;
                 }
 
-                //доробити - не зовсім рівно малюється
-                 qInfo() << "performed steps: " << _performedSteps << "\n";
-                 qInfo() << "zero ctc steps: " << _stepsForZeroCtc << "\n";
-                 qInfo() << "remainder: " << _stepsForDivision % _stepsForZeroCtc << "\n";
                 bool changeNeeded = (_stepsForDivision > 0) && ((_stepsForDivision % _stepsForZeroCtc) == 0);
                 if(changeNeeded)
                 {
                     updateOc1a();
 
                 }
-                else
-                {
-                    //++_stepsForDivision;
-                }
-                /*if(_performedSteps > 0)
+
+                if(!_reachedTop && _performedSteps > 0)
                 {
                     ++_stepsForDivision;
-                }*/
+                }
 
             }
             else
@@ -112,22 +98,21 @@ void GraphicDrawer::drawNextCtcMode()
 
                 if(_performedSteps == 0)
                 {
-                    reachedA = _atmegaTimer.comparableValueA() <=  _yCoordinateToBorder[_performedSteps];
-                    reachedB = _atmegaTimer.comparableValueB() <=  _yCoordinateToBorder[_performedSteps];
+                    reachedA = _atmegaTimer.ocr1a() <=  _yCoordinateToBorder[_performedSteps];
+                    reachedB = _atmegaTimer.ocr1b() <=  _yCoordinateToBorder[_performedSteps];
                 }
                 else
                 {
-                    reachedA = inRange(_atmegaTimer.comparableValueA(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
-                    reachedB = inRange(_atmegaTimer.comparableValueB(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
+                    reachedA = inRange(_atmegaTimer.ocr1a(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
+                    reachedB = inRange(_atmegaTimer.ocr1b(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
                 }
 
                 if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps]))
                 {
-                    qInfo() << "reachedd top in CTC in steps: " << _performedSteps << "\n";
                     _reachedTop = true;
                 }
 
-                if(reachedA/*equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps])*/)
+                if(reachedA)
                 {
                     updateOc1a();
                 }
@@ -143,13 +128,10 @@ void GraphicDrawer::drawNextCtcMode()
     }
 
     _scene.addLine(QLine(_tcntPrevX, _tcntPrevY, _tcntNewX, _tcntNewY), QPen(Qt::GlobalColor::black));
-    qInfo() << "newY is: " << (_tcntNewY - _yDelta) << "\n";
-    qInfo() << "drawed line is: " << _tcntPrevX << " " << _tcntPrevY << " " << _tcntNewX << " " << _tcntNewY << "\n";
     _scene.addLine(QLine(_oc1aPrevX, _oc1aPrevY, _oc1aNewX, _oc1aNewY), QPen(Qt::GlobalColor::black));
     _scene.addLine(QLine(_oc1bPrevX, _oc1bPrevY, _oc1bNewX, _oc1bNewY), QPen(Qt::GlobalColor::black));
 }
 
-//зробити малювання при 0 по-іншому
 void GraphicDrawer::drawNextFastPwmMode()
 {
     if(_reachedTop)
@@ -162,12 +144,11 @@ void GraphicDrawer::drawNextFastPwmMode()
         updateOc1aCoordinates();
         updateOc1bCoordinates();
 
-        if(_stepsToReachMax == _performedSteps) //add check that reached max possible value - 65535
+        if(_stepsToReachMax == _performedSteps)
         {
             _reachedTop = true;
         }
 
-        //replace all checks with range
         if(_performedSteps <= _drawingSteps)
         {
             bool equalA = false;
@@ -175,7 +156,13 @@ void GraphicDrawer::drawNextFastPwmMode()
 
             if(_performedSteps == 0)
             {
+                int prevOcr1a = _atmegaTimer.ocr1a();
                 _atmegaTimer.loadOcr1aFromBuffer();
+                if(prevOcr1a != _atmegaTimer.ocr1a())
+                {
+                    updateCoordinates();
+                }
+
                 _atmegaTimer.loadOcr1bFromBuffer();
 
                 equalA = _atmegaTimer.comparableValueA() <=  _yCoordinateToBorder[_performedSteps];
@@ -190,18 +177,14 @@ void GraphicDrawer::drawNextFastPwmMode()
             if(equalA)
             {
                updateOc1a();
-
-                qInfo() << "comparable value A is: " << (qreal)_atmegaTimer.comparableValueA() << "\n";
             }
 
             if(equalB)
             {
                updateOc1b();
-
-                qInfo() << "comparable value B is: " << (qreal)_atmegaTimer.comparableValueB() << "\n";
             }
 
-            if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps])/*(qreal)getNeededTopValue() <= _yCoordinateToBorder[_performedSteps]*/)
+            if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps]))
             {
                 _reachedTop = true;
 
@@ -211,9 +194,6 @@ void GraphicDrawer::drawNextFastPwmMode()
                 }
                 updateOc1b();
                 updateTov1();
-
-                qInfo() << "needed top value is: " << (qreal)getNeededTopValue() << "\n";
-                qInfo() << "value in map: " << (qreal)_yCoordinateToBorder[_performedSteps] << "\n";
             }
         }
 
@@ -230,7 +210,13 @@ void GraphicDrawer::drawNextPhaseCorrectPwmMode()
     if(_reachedTop)
     {
         setTcntDecreasing();
+
+        int prevOcr1a = _atmegaTimer.ocr1a();
         _atmegaTimer.loadOcr1aFromBuffer();
+        if(prevOcr1a != _atmegaTimer.ocr1a())
+        {
+            updateCoordinates();
+        }
         _atmegaTimer.loadOcr1bFromBuffer();
     }
     else
@@ -239,13 +225,11 @@ void GraphicDrawer::drawNextPhaseCorrectPwmMode()
         updateOc1aCoordinates();
         updateOc1bCoordinates();
 
-        if(_stepsToReachMax == _performedSteps && _isGoingUp) //add check that reached max possible value - 65535
+        if(_stepsToReachMax == _performedSteps && _isGoingUp)
         {
             _reachedTop = true;
-            qInfo() << "reached top through steps: " << _performedSteps << "\n";
         }
 
-        //replace all checks with range
         if(_performedSteps <= _drawingSteps)
         {
             bool equalA = false;
@@ -267,26 +251,18 @@ void GraphicDrawer::drawNextPhaseCorrectPwmMode()
                 equalB = inRange(_atmegaTimer.comparableValueB(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
             }
 
-            if(equalA/*equal(_atmegaTimer.comparableValue(), _yCoordinateToBorder[_performedSteps])*/)
+            if(equalA)
             {
                 updateOc1a();
-
-                qInfo() << "comparable value A is: " << (qreal)_atmegaTimer.comparableValueA() << "\n";
             }
 
-            if(equalB/*equal(_atmegaTimer.comparableValue(), _yCoordinateToBorder[_performedSteps])*/)
+            if(equalB)
             {
                 updateOc1b();
-
-                qInfo() << "comparable value B is: " << (qreal)_atmegaTimer.comparableValueB() << "\n";
             }
 
-            if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps])/*(qreal)getNeededTopValue() <= _yCoordinateToBorder[_performedSteps]*/)
+            if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps]))
             {
-
-                qInfo() << "reached top in phase correct with steps: " << _performedSteps << "\n";
-                qInfo() << "needed top value is: " << (qreal)getNeededTopValue() << "\n";
-
                 if(_isGoingUp)
                 {
                     _reachedTop = true;
@@ -331,13 +307,11 @@ void GraphicDrawer::drawNextPhaseFrequencyCorrectMode()
         updateOc1aCoordinates();
         updateOc1bCoordinates();
 
-        if(_stepsToReachMax == _performedSteps && _isGoingUp) //add check that reached max possible value - 65535
+        if(_stepsToReachMax == _performedSteps && _isGoingUp)
         {
             _reachedTop = true;
-            qInfo() << "reached top through steps: " << _performedSteps << "\n";
         }
 
-        //replace all checks with range
         if(_performedSteps <= _drawingSteps)
         {
             bool equalA = false;
@@ -352,7 +326,12 @@ void GraphicDrawer::drawNextPhaseFrequencyCorrectMode()
                     _yDelta = -_yDelta;
                     _isGoingUp = true;
 
+                    int prevOcr1a = _atmegaTimer.ocr1a();
                     _atmegaTimer.loadOcr1aFromBuffer();
+                    if(prevOcr1a != _atmegaTimer.ocr1a())
+                    {
+                        updateCoordinates();
+                    }
                     _atmegaTimer.loadOcr1bFromBuffer();
                 }
             }
@@ -362,26 +341,18 @@ void GraphicDrawer::drawNextPhaseFrequencyCorrectMode()
                 equalB = inRange(_atmegaTimer.comparableValueB(), _yCoordinateToBorder[_performedSteps - 1], _yCoordinateToBorder[_performedSteps]);
             }
 
-            if(equalA/*equal(_atmegaTimer.comparableValue(), _yCoordinateToBorder[_performedSteps])*/)
+            if(equalA)
             {
                 updateOc1a();
-
-                qInfo() << "comparable value is: " << (qreal)_atmegaTimer.comparableValueA() << "\n";
             }
 
-            if(equalB/*equal(_atmegaTimer.comparableValue(), _yCoordinateToBorder[_performedSteps])*/)
+            if(equalB)
             {
                 updateOc1b();
-
-                qInfo() << "comparable value B is: " << (qreal)_atmegaTimer.comparableValueB() << "\n";
             }
 
-            if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps])/*(qreal)getNeededTopValue() <= _yCoordinateToBorder[_performedSteps]*/)
+            if(equal(getNeededTopValue(), _yCoordinateToBorder[_performedSteps]))
             {
-
-                qInfo() << "reached top in phase correct with steps: " << _performedSteps << "\n";
-                qInfo() << "needed top value is: " << (qreal)getNeededTopValue() << "\n";
-
                 if(_isGoingUp)
                 {
                     _reachedTop = true;
@@ -560,8 +531,6 @@ void GraphicDrawer::setStartingState()
     _oc1bPrevY = _oc1bStartY;
     _oc1bNewX = _oc1bPrevX;
     _oc1bNewY = _oc1bPrevY;
-
-    //determineDeltas();
 }
 
 void GraphicDrawer::determineDeltasA()
@@ -651,11 +620,6 @@ void GraphicDrawer::determineDeltasA()
         }
 
          emit _atmegaTimer.oc1aChanged();
-
-        //_oc1aYDelta = 20;
-        //_oc1aYDelta = 0;
-        //_oc1aXDelta = _xDelta;
-        //_oc1aPrevY = _oc1aStartY - 20;
     }
     else if(_atmegaTimer.outputModeA() == AtmegaTimer::OutputCompareMode::Inverted)
     {
@@ -707,14 +671,7 @@ void GraphicDrawer::determineDeltasA()
         }
 
         emit _atmegaTimer.oc1aChanged();
-        //_oc1aYDelta = -20;
-        //_oc1aYDelta = 0;
-        //_oc1aXDelta = _xDelta;
-        //_oc1aPrevY = _oc1aStartY;
     }
-
-    //_oc1aYDelta = -20;
-    //_oc1aXDelta = _xDelta;
 }
 
 void GraphicDrawer::determineDeltasB()
@@ -804,11 +761,6 @@ void GraphicDrawer::determineDeltasB()
         }
 
          emit _atmegaTimer.oc1bChanged();
-
-        //_oc1aYDelta = 20;
-        //_oc1aYDelta = 0;
-        //_oc1aXDelta = _xDelta;
-        //_oc1aPrevY = _oc1aStartY - 20;
     }
     else if(_atmegaTimer.outputModeB() == AtmegaTimer::OutputCompareMode::Inverted)
     {
@@ -860,21 +812,13 @@ void GraphicDrawer::determineDeltasB()
         }
 
         emit _atmegaTimer.oc1bChanged();
-        //_oc1aYDelta = -20;
-        //_oc1aYDelta = 0;
-        //_oc1aXDelta = _xDelta;
-        //_oc1aPrevY = _oc1aStartY;
     }
-
-    //_oc1aYDelta = -20;
-    //_oc1aXDelta = _xDelta;
 }
 
 void GraphicDrawer::refreshDeltasA()
 {
     if(_atmegaTimer.outputModeA() == AtmegaTimer::OutputCompareMode::Disconnected)
     {
-        /*_oc1aYDelta = 0;*/
         _oc1aXDelta = 0;
     }
     else if(_atmegaTimer.outputModeA() == AtmegaTimer::OutputCompareMode::Toggle)
@@ -886,7 +830,7 @@ void GraphicDrawer::refreshDeltasA()
             case WaveFormGenerator::Mode::FastPWMOcr:
             case WaveFormGenerator::Mode::FastPWMIcr:
             case WaveFormGenerator::Mode::PWMPhOcr:
-            case WaveFormGenerator::Mode::PWMPhFrOcr: /*_oc1aYDelta = -20;*/ _oc1aXDelta = _xDelta; break;
+            case WaveFormGenerator::Mode::PWMPhFrOcr: _oc1aXDelta = _xDelta; break;
 
             case WaveFormGenerator::Mode::PWMPhIcr:
             case WaveFormGenerator::Mode::PWMPhFrIcr:
@@ -897,7 +841,7 @@ void GraphicDrawer::refreshDeltasA()
             case WaveFormGenerator::Mode::PWM8Ph:
             case WaveFormGenerator::Mode::PWM9Ph:
             case WaveFormGenerator::Mode::PWM10Ph:
-            case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1aXDelta = 0; break;
+            case WaveFormGenerator::Mode::Reserved: _oc1aXDelta = 0; break;
         }
     }
     else if(_atmegaTimer.outputModeA() == AtmegaTimer::OutputCompareMode::Normal)
@@ -915,18 +859,14 @@ void GraphicDrawer::refreshDeltasA()
             case WaveFormGenerator::Mode::PWMPhOcr:
             case WaveFormGenerator::Mode::PWMPhIcr:
             case WaveFormGenerator::Mode::PWMPhFrIcr:
-            case WaveFormGenerator::Mode::PWMPhFrOcr: /*_oc1aYDelta = 20;*/ _oc1aXDelta = _xDelta; break;
+            case WaveFormGenerator::Mode::PWMPhFrOcr: _oc1aXDelta = _xDelta; break;
 
             case WaveFormGenerator::Mode::CTCOcr:
-            case WaveFormGenerator::Mode::CTCIcr: /*_oc1aYDelta = 0;*/ _oc1aXDelta = _xDelta; break;
+            case WaveFormGenerator::Mode::CTCIcr: _oc1aXDelta = _xDelta; break;
 
             case WaveFormGenerator::Mode::Normal:
-            case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1aXDelta = 0; break;
+            case WaveFormGenerator::Mode::Reserved: _oc1aXDelta = 0; break;
         }
-        //_oc1aYDelta = 20;
-        //_oc1aYDelta = 0;
-        //_oc1aXDelta = _xDelta;
-        //_oc1aPrevY = _oc1aStartY - 20;
     }
     else if(_atmegaTimer.outputModeA() == AtmegaTimer::OutputCompareMode::Inverted)
     {
@@ -943,29 +883,21 @@ void GraphicDrawer::refreshDeltasA()
             case WaveFormGenerator::Mode::PWMPhOcr:
             case WaveFormGenerator::Mode::PWMPhIcr:
             case WaveFormGenerator::Mode::PWMPhFrIcr:
-            case WaveFormGenerator::Mode::PWMPhFrOcr: /*_oc1aYDelta = -20;*/ _oc1aXDelta = _xDelta; break;
+            case WaveFormGenerator::Mode::PWMPhFrOcr: _oc1aXDelta = _xDelta; break;
 
             case WaveFormGenerator::Mode::CTCOcr:
-            case WaveFormGenerator::Mode::CTCIcr: /*_oc1aYDelta = 0;*/ _oc1aXDelta = _xDelta; break;
+            case WaveFormGenerator::Mode::CTCIcr: _oc1aXDelta = _xDelta; break;
 
             case WaveFormGenerator::Mode::Normal:
-            case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1aXDelta = 0; break;
+            case WaveFormGenerator::Mode::Reserved: _oc1aXDelta = 0; break;
         }
-        //_oc1aYDelta = -20;
-        //_oc1aYDelta = 0;
-        //_oc1aXDelta = _xDelta;
-        //_oc1aPrevY = _oc1aStartY;
     }
-
-    //_oc1aYDelta = -20;
-    //_oc1aXDelta = _xDelta;
 }
 
 void GraphicDrawer::refreshDeltasB()
 {
     if(_atmegaTimer.outputModeB() == AtmegaTimer::OutputCompareMode::Disconnected)
     {
-        /*_oc1aYDelta = 0;*/
         _oc1bXDelta = 0;
     }
     else if(_atmegaTimer.outputModeB() == AtmegaTimer::OutputCompareMode::Toggle)
@@ -988,7 +920,7 @@ void GraphicDrawer::refreshDeltasB()
             case WaveFormGenerator::Mode::PWM8Ph:
             case WaveFormGenerator::Mode::PWM9Ph:
             case WaveFormGenerator::Mode::PWM10Ph:
-            case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1bXDelta = 0; break;
+            case WaveFormGenerator::Mode::Reserved: _oc1bXDelta = 0; break;
         }
     }
     else if(_atmegaTimer.outputModeB() == AtmegaTimer::OutputCompareMode::Normal)
@@ -1014,10 +946,6 @@ void GraphicDrawer::refreshDeltasB()
             case WaveFormGenerator::Mode::Normal:
             case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1bXDelta = 0; break;
         }
-        //_oc1aYDelta = 20;
-        //_oc1aYDelta = 0;
-        //_oc1aXDelta = _xDelta;
-        //_oc1aPrevY = _oc1aStartY - 20;
     }
     else if(_atmegaTimer.outputModeB() == AtmegaTimer::OutputCompareMode::Inverted)
     {
@@ -1034,22 +962,15 @@ void GraphicDrawer::refreshDeltasB()
             case WaveFormGenerator::Mode::PWMPhOcr:
             case WaveFormGenerator::Mode::PWMPhIcr:
             case WaveFormGenerator::Mode::PWMPhFrIcr:
-            case WaveFormGenerator::Mode::PWMPhFrOcr: /*_oc1aYDelta = -20;*/ _oc1bXDelta = _xDelta; break;
+            case WaveFormGenerator::Mode::PWMPhFrOcr: _oc1bXDelta = _xDelta; break;
 
             case WaveFormGenerator::Mode::CTCOcr:
-            case WaveFormGenerator::Mode::CTCIcr: /*_oc1aYDelta = 0;*/ _oc1bXDelta = _xDelta; break;
+            case WaveFormGenerator::Mode::CTCIcr: _oc1bXDelta = _xDelta; break;
 
             case WaveFormGenerator::Mode::Normal:
-            case WaveFormGenerator::Mode::Reserved: /*_oc1aYDelta = 0;*/ _oc1bXDelta = 0; break;
+            case WaveFormGenerator::Mode::Reserved: _oc1bXDelta = 0; break;
         }
-        //_oc1aYDelta = -20;
-        //_oc1aYDelta = 0;
-        //_oc1aXDelta = _xDelta;
-        //_oc1aPrevY = _oc1aStartY;
     }
-
-    //_oc1aYDelta = -20;
-    //_oc1aXDelta = _xDelta;
 }
 
 void GraphicDrawer::buildCoordinates()
@@ -1077,10 +998,7 @@ void GraphicDrawer::updateCoordinates()
 
 void GraphicDrawer::buildCoordinateYMap()
 {
-    //подумати над розширенням, бо для дуже малих значень таймера лінії нема або дуже мала
-    //1. або будувати для кожного top своє співвідношення.
-    //int yStep = _atmegaTimer.top() / _drawingSteps; //build from maximum value of timer
-    qreal yStep = (qreal)getNeededTopValue()/*_atmegaTimer.top()*/ / (qreal)_drawingSteps;
+    qreal yStep = (qreal)getNeededTopValue() / (qreal)_drawingSteps;
 
     if(getNeededTopValue() == 0)
     {
@@ -1091,32 +1009,27 @@ void GraphicDrawer::buildCoordinateYMap()
        _stepsToReachMax = 65535 / yStep;
     }
 
-    //qInfo() << "YStep is: " << yStep << "\n";//int value = 0;
     qreal value = 0.0;
     for(int i = 0; i <= _drawingSteps; ++i)
     {
-        _yCoordinateToBorder.insert(i, /*value*/ yStep * i);
-        //value += yStep;
+        _yCoordinateToBorder.insert(i, yStep * i);
 
     }
-    qInfo() << "last value in map is: " << _yCoordinateToBorder[_drawingSteps - 1] << "\n";
-    //_yCoordinateToBorder.insert(_drawingSteps - 1, _atmegaTimer.top());
 
-    qreal height = (_tcntStartY / 65535.0) * (qreal)getNeededTopValue()/*_atmegaTimer.top()*/;
+    qreal height = (_tcntStartY / 65535.0) * (qreal)getNeededTopValue();
     qreal prevDelta = _yDelta;
-    _yDelta = height / (qreal)_drawingSteps; //must be timer max value - 65535
+    _yDelta = height / (qreal)_drawingSteps;
     if(!_isGoingUp)
     {
         _yDelta = -_yDelta;
     }
-    qInfo() << "yDelta is: " << _yDelta << "\n";
+
     qreal diff = 1;
     if(!equal(prevDelta, _yDelta))
     {
         diff = prevDelta / _yDelta;
     }
     _performedSteps *= diff;
-    //_performedSteps = 0;
 }
 
 void GraphicDrawer::buildCoordinateXMap()
@@ -1137,18 +1050,11 @@ void GraphicDrawer::buildCoordinateXMap()
     }
     else
     {
-        //add the calculation for other modes
-        qreal secondsNeeded = (qreal)actualSteps/*_atmegaTimer.top()*/ / (qreal)_atmegaTimer.actualClk();
+        qreal secondsNeeded = (qreal)actualSteps/ (qreal)_atmegaTimer.actualClk();
         pixelsNeeded = _xDistanceBetweenPoints * secondsNeeded;
     }
 
     _xDelta = pixelsNeeded / (qreal)_drawingSteps;
-
-    //_oc1aXDelta = _xDelta;
-
-    qInfo() << "pixels needed: " << pixelsNeeded << "\n";
-    qInfo() << "xDelta is: " << _xDelta << "\n";
-    qInfo() << "steps for zeroCtc: " << _stepsForZeroCtc << "\n";
 }
 
  int GraphicDrawer::getNeededTopValue()
